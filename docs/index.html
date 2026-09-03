@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XavierLabs AI — Autonomous Computational Scientific Research Engine</title>
+  <title>XavierLabs AI | Autonomous Scientific Research Swarm</title>
   <meta name="description" content="An autonomous, terminal-native research engine executing the computational scientific method end-to-end with a decentralized multi-agent swarm.">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
-  <!-- Google Fonts: JetBrains Mono -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,24 +20,31 @@
   <header class="navbar">
     <div class="container">
       <a href="#" class="nav-brand">
-        <span class="brand-dot"></span>
-        <span>xavierlabs</span>
-        <span class="brand-tag">core/v0.1.0</span>
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sage);">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="brand-title">xavierlabs</span>
+        <span class="brand-badge">v0.1.0</span>
       </a>
 
       <nav>
         <ul class="nav-links">
           <li><a href="#overview">Overview</a></li>
-          <li><a href="#swarm">01 / Swarm</a></li>
-          <li><a href="#sandbox">02 / Sandbox</a></li>
-          <li><a href="#artifacts">03 / Artifacts</a></li>
-          <li><a href="#quickstart">04 / Install</a></li>
+          <li><a href="#swarm">The Swarm</a></li>
+          <li><a href="#sandbox">Sandbox & Debugger</a></li>
+          <li><a href="#artifacts">Publications</a></li>
+          <li><a href="#quickstart">Quickstart</a></li>
         </ul>
       </nav>
 
       <div>
         <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener noreferrer" class="btn-nav-github">
-          <span>GitHub ↗</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>Star on GitHub</span>
         </a>
       </div>
     </div>
@@ -46,295 +53,397 @@
   <!-- Hero Section -->
   <section class="hero" id="overview">
     <div class="container">
-      <div class="hero-meta">
-        <span class="hero-meta-dot"></span>
-        <span>SYSTEM // AUTONOMOUS RESEARCH SWARM</span>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>OPEN SOURCE RESEARCH SWARM • v0.1.0</span>
       </div>
 
       <h1 class="hero-title">
-        The computational <br>
-        scientific method, <span>automated.</span>
+        The computational scientific method, <br>
+        <span class="highlight">autonomous from the CLI.</span>
       </h1>
 
       <p class="hero-desc">
-        XavierLabs AI offloads the mechanical execution of digital research: literature ingestion, hypothesis formulation, sandboxed execution with automated traceback debugging, and publication-ready manuscript synthesis.
+        XavierLabs AI automates the mechanical execution of digital research: literature review, hypothesis formulation, sandboxed execution with automated traceback debugging, and manuscript synthesis.
       </p>
 
       <div class="hero-actions">
-        <a href="#quickstart" class="btn-hero-primary">
-          <span>$ xavier research</span>
+        <a href="#quickstart" class="btn-primary">
+          <span>Get Started CLI</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
         </a>
-        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" class="btn-hero-secondary">
-          <span>Source Repository ↗</span>
+        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+          </svg>
+          <span>View on GitHub</span>
         </a>
       </div>
 
-      <!-- Quick Install Strip -->
-      <div class="install-strip">
-        <code><span>$</span>pip install git+https://github.com/venstqs/XavierLabs-AI.git</code>
-        <button class="btn-copy-strip" data-copy-target="pipCmd">Copy</button>
+      <!-- Install Bar Widget -->
+      <div class="install-bar">
+        <div class="install-tabs">
+          <button class="install-tab active" data-tab="pip">pip</button>
+          <button class="install-tab" data-tab="git">git clone</button>
+          <button class="install-tab" data-tab="uv">uv</button>
+        </div>
+        <div class="install-box">
+          <code id="installCode"><span class="prefix">$</span>pip install git+https://github.com/venstqs/XavierLabs-AI.git</code>
+          <button class="btn-copy" data-copy-target="installCode" title="Copy to clipboard">Copy</button>
+        </div>
       </div>
-      <div style="display:none;" id="pipCmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</div>
 
-      <!-- Terminal Block -->
-      <div class="terminal-block">
-        <div class="terminal-topbar">
-          <div>xavier@lab:~</div>
-          <div class="terminal-pills-bar">
-            <button class="term-pill active" data-cmd="research">xavier research</button>
-            <button class="term-pill" data-cmd="paper">xavier paper</button>
-            <button class="term-pill" data-cmd="history">xavier history</button>
-            <button class="term-pill" data-cmd="config">xavier config</button>
+      <!-- Interactive Feynman Terminal Card -->
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot dot-red"></div>
+            <div class="terminal-dot dot-yellow"></div>
+            <div class="terminal-dot dot-green"></div>
+            <span class="terminal-title">xavier@lab:~</span>
+          </div>
+          <div class="terminal-actions">
+            <button class="pill-cmd active" data-cmd="research">xavier research</button>
+            <button class="pill-cmd" data-cmd="paper">xavier paper</button>
+            <button class="pill-cmd" data-cmd="history">xavier history</button>
+            <button class="pill-cmd" data-cmd="config">xavier config</button>
           </div>
         </div>
-        <div class="terminal-screen" id="terminalBody">
-          <!-- Terminal output rendered by app.js -->
+        <div class="terminal-window" id="terminalBody">
+          <!-- Live interactive stream rendered by app.js -->
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 01 // Swarm Architecture -->
+  <!-- The Swarm -->
   <section class="section" id="swarm">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">01 // Architecture</span>
-        <h2 class="section-title">The 4-Agent Orchestration Swarm</h2>
+        <span class="section-tag">System Architecture</span>
+        <h2 class="section-title">The Continuous Agentic Loop</h2>
         <p class="section-desc">
-          Four specialized agents execute the scientific method in a continuous stateful loop triggered via a single CLI invocation.
+          A stateful multi-agent orchestration pipeline where each persona owns a rigorous phase of the scientific method.
         </p>
       </div>
 
-      <div class="spec-grid">
+      <div class="swarm-grid">
         <!-- The Ideator -->
-        <div class="spec-cell">
-          <div class="spec-num">[01]</div>
-          <h3 class="spec-title">The Ideator</h3>
-          <div class="spec-role">Discovery & Hypothesis</div>
-          <p class="spec-desc">
-            Ingests codebases and queries academic databases (ArXiv, Semantic Scholar) via zero-key open APIs. Formulates mathematically sound hypotheses formatted as JSON configurations.
+        <div class="agent-card">
+          <div class="agent-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+              <path d="M11 8v6M8 11h6"/>
+            </svg>
+          </div>
+          <h3 class="agent-name">The Ideator</h3>
+          <div class="agent-role">Discovery & Hypothesis</div>
+          <p class="agent-desc">
+            Queries academic databases (ArXiv, Semantic Scholar) via zero-key open APIs. Ingests codebases and generates novel hypotheses formatted as strict JSON configurations.
           </p>
-          <ul class="spec-items">
-            <li>Open-access ArXiv queries</li>
-            <li>Semantic Scholar citation graphing</li>
-            <li>Strict JSON schema generation</li>
+          <ul class="agent-features">
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>ArXiv & Semantic Scholar queries</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Codebase & dataset ingestion</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Structured JSON hypothesis schema</span>
+            </li>
           </ul>
         </div>
 
         <!-- The Reviewer -->
-        <div class="spec-cell">
-          <div class="spec-num">[02]</div>
-          <h3 class="spec-title">The Reviewer</h3>
-          <div class="spec-role">Adversarial Peer Critique</div>
-          <p class="spec-desc">
-            Simulates a rigorous peer-review process. Scores hypotheses for novelty and theoretical rigor (1-10) and audits the Coder’s scripts for architectural flaws prior to execution.
+        <div class="agent-card">
+          <div class="agent-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18M3 9l9-6 9 6M6 12l-3 6h6l-3-6zM18 12l-3 6h6l-3-6z"/>
+            </svg>
+          </div>
+          <h3 class="agent-name">The Reviewer</h3>
+          <div class="agent-role">Critique & Logic</div>
+          <p class="agent-desc">
+            Simulates a rigorous peer-review process. Evaluates hypotheses for novelty and theoretical rigor (1-10) and audits scripts for architectural flaws before execution.
           </p>
-          <ul class="spec-items">
-            <li>Novelty & rigor validation</li>
-            <li>Rejects hand-waving claims</li>
-            <li>Pre-flight safety & leak auditing</li>
+          <ul class="agent-features">
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Novelty, rigor & feasibility scoring</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Adversarial hypothesis rejection</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Pre-flight code safety auditing</span>
+            </li>
           </ul>
         </div>
 
         <!-- The Coder -->
-        <div class="spec-cell">
-          <div class="spec-num">[03]</div>
-          <h3 class="spec-title">The Coder</h3>
-          <div class="spec-role">Execution & Auto-Debugging</div>
-          <p class="spec-desc">
-            Translates approved hypotheses into executable Python scripts (experiment.py). If a run crashes, ingests the stderr traceback and autonomously rewrites and re-executes the code.
+        <div class="agent-card">
+          <div class="agent-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <h3 class="agent-name">The Coder</h3>
+          <div class="agent-role">Execution & Auto-Debugging</div>
+          <p class="agent-desc">
+            Translates hypotheses into executable machine learning and simulation scripts. If a run crashes, ingests stderr tracebacks and autonomously rewrites the code.
           </p>
-          <ul class="spec-items">
-            <li>Deterministic random seeds</li>
-            <li>Self-contained simulation code</li>
-            <li>Automated traceback repair loop</li>
+          <ul class="agent-features">
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Deterministic seed enforcement</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Self-contained experiment.py</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Traceback auto-debugging feedback loop</span>
+            </li>
           </ul>
         </div>
 
         <!-- The Synthesizer -->
-        <div class="spec-cell">
-          <div class="spec-num">[04]</div>
-          <h3 class="spec-title">The Synthesizer</h3>
-          <div class="spec-role">Artifact Compilation</div>
-          <p class="spec-desc">
-            Extracts metrics, generates data visualization scripts (plot.py) using Matplotlib, and compiles complete publication-grade LaTeX, PDF, and Markdown manuscripts.
+        <div class="agent-card">
+          <div class="agent-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <h3 class="agent-name">The Synthesizer</h3>
+          <div class="agent-role">Manuscript & Visuals</div>
+          <p class="agent-desc">
+            Generates data visualization scripts (plot.py) using Matplotlib and compiles final academic methodology reports in LaTeX, PDF, and Markdown.
           </p>
-          <ul class="spec-items">
-            <li>Automated publication charts</li>
-            <li>Standard LaTeX manuscript</li>
-            <li>Direct PDF paper compilation</li>
+          <ul class="agent-features">
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Automated Matplotlib figures</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Standard LaTeX source code</span>
+            </li>
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Direct academic PDF compilation</span>
+            </li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 02 // Sandbox & Auto-Debugger -->
-  <section class="section" id="sandbox">
+  <!-- Sandbox & Auto-Debugger -->
+  <section class="section" id="sandbox" style="background: rgba(255, 255, 255, 0.01);">
     <div class="container">
-      <div class="section-header">
-        <span class="section-label">02 // Containment & Auto-Debug</span>
-        <h2 class="section-title">Self-Healing Execution Runtime</h2>
-        <p class="section-desc">
-          Generated experiments execute within isolated boundaries. If runtime exceptions occur, the CLI feeds the traceback directly back to the Coder agent to resolve the issue without human intervention.
-        </p>
-      </div>
-
-      <div class="debug-grid">
-        <div class="debug-info">
+      <div class="feature-split">
+        <div class="feature-info">
+          <span class="section-tag">Self-Healing Containment</span>
+          <h3>Zero-Crash Autonomous Execution</h3>
           <p>
-            Traditional agent harnesses stop immediately when code crashes. XavierLabs AI isolates runtime processes, captures stderr telemetry, diagnoses algorithmic failures, and applies pinpoint patches.
+            Autonomous science code often crashes on edge-cases or dimension mismatches. XavierLabs AI isolates runtime processes, intercepts stderr tracebacks, and repairs code in a closed loop.
           </p>
-          <ul class="spec-list">
+          <ul class="feature-checklist">
             <li>
-              <div class="spec-list-icon">[+]</div>
-              <div class="spec-list-content">
-                <strong>Dual Sandbox Architecture</strong>
-                <span>Spins up Docker containers when available, with an automatic isolated local subprocess fallback.</span>
+              <div class="check-icon">✓</div>
+              <div>
+                <div class="check-title">Dual Sandbox Engine</div>
+                <div class="check-desc">Executes within isolated Docker containers when available, with an automatic secure local subprocess fallback.</div>
               </div>
             </li>
             <li>
-              <div class="spec-list-icon">[+]</div>
-              <div class="spec-list-content">
-                <strong>Traceback Diagnosis Loop</strong>
-                <span>Captures stack traces from stderr, extracts failure lines, and rewrites corrected scripts up to 3 iterations.</span>
+              <div class="check-icon">✓</div>
+              <div>
+                <div class="check-title">Traceback Feedback Loop</div>
+                <div class="check-desc">Crashes are parsed, analyzed for root causes, and rewritten by The Coder up to 3 automated retries.</div>
               </div>
             </li>
             <li>
-              <div class="spec-list-icon">[+]</div>
-              <div class="spec-list-content">
-                <strong>Strict Resource Guardrails</strong>
-                <span>Enforces execution timeouts and memory quotas to ensure host machines remain responsive.</span>
+              <div class="check-icon">✓</div>
+              <div>
+                <div class="check-title">Strict Guardrail Timeouts</div>
+                <div class="check-desc">Enforces strict compute limits to prevent runaway loops or memory leaks on local hardware.</div>
               </div>
             </li>
           </ul>
         </div>
 
-        <div class="code-window">
-          <div class="code-window-bar">
-            <span>auto-debugger.traceback</span>
-            <span class="code-status-pill">SELF-HEALED</span>
+        <div class="code-mockup">
+          <div class="mockup-header">
+            <span>auto-debugger.telemetry</span>
+            <span class="badge-pill-red">CRASH DETECTED</span>
           </div>
-          <div class="code-content">
-<span class="term-dim">// 1. Runtime exception captured</span>
-<span style="color: #ff6b6b;">Traceback (most recent call last):
-  File "experiment.py", line 38, in &lt;module&gt;
+          <div class="mockup-body">
+<span class="term-dim">// 1. Attempt #1 Execution Failure</span>
+<span style="color: var(--accent-red);">Traceback (most recent call last):
+  File "experiment.py", line 42, in &lt;module&gt;
     loss = criterion(pred, target)
 ValueError: Expected target shape (100,) but got (100, 1)</span>
 
-<span class="term-green">// 2. Coder analyzing failure</span>
-<span class="term-dim">Root cause: Target dimension mismatch in loss function.
+<span class="term-green">// 2. Coder Analyzing Traceback...</span>
+<span class="term-dim">Root cause: Target dimension mismatch in loss calculation.
 Patch applied: target.squeeze(-1)</span>
 
-<span class="term-white">// 3. Re-execution in sandbox</span>
+<span class="term-cyan">// 3. Attempt #2 Re-execution:</span>
 <span class="term-green">✔ Return Code: 0 (Success in 0.62s)
-✔ Numerical metrics written to metrics.json</span>
+✔ Numerical metrics recorded to metrics.json</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 03 // Artifacts -->
+  <!-- Publications & Artifacts -->
   <section class="section" id="artifacts">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">03 // Publications</span>
-        <h2 class="section-title">Complete Research Manuscripts</h2>
+        <span class="section-tag">Scientific Artifacts</span>
+        <h2 class="section-title">Complete Research Papers on Every Run</h2>
         <p class="section-desc">
-          Every completed experiment automatically generates a clean artifact directory with full scientific documentation.
+          Every completed experiment produces a publication-ready artifact bundle in your workspace.
         </p>
       </div>
 
-      <div class="artifacts-table-block">
-        <div class="artifact-row">
-          <div class="artifact-name">Publication PDF</div>
+      <div class="artifacts-grid">
+        <div class="artifact-card">
+          <div class="artifact-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <h4 class="artifact-title">Publication PDF</h4>
           <div class="artifact-ext">paper.pdf</div>
-          <div class="artifact-desc">Academic-formatted PDF compiled via built-in system engine with MathJax equations, tables, and figures.</div>
+          <p class="artifact-desc">Academic-formatted PDF compiled via built-in system engine with MathJax equations, tables, and figures.</p>
         </div>
-        <div class="artifact-row">
-          <div class="artifact-name">LaTeX Manuscript</div>
+
+        <div class="artifact-card">
+          <div class="artifact-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+          </div>
+          <h4 class="artifact-title">LaTeX Source</h4>
           <div class="artifact-ext">paper.tex</div>
-          <div class="artifact-desc">Full <code>\documentclass[11pt]{article}</code> source code ready for arXiv or journal submission.</div>
+          <p class="artifact-desc">Clean <code>\documentclass[11pt]{article}</code> source code ready for immediate arXiv or conference submission.</p>
         </div>
-        <div class="artifact-row">
-          <div class="artifact-name">Academic HTML</div>
-          <div class="artifact-ext">paper.html</div>
-          <div class="artifact-desc">Standalone, responsive HTML research report readable in any web browser without third-party plugins.</div>
-        </div>
-        <div class="artifact-row">
-          <div class="artifact-name">Scientific Figures</div>
+
+        <div class="artifact-card">
+          <div class="artifact-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h4 class="artifact-title">Scientific Figures</h4>
           <div class="artifact-ext">plot.png</div>
-          <div class="artifact-desc">High-resolution visualization charts generated via automatically synthesized Matplotlib scripts.</div>
+          <p class="artifact-desc">High-resolution visualization charts generated via automatically synthesized Matplotlib scripts.</p>
         </div>
-        <div class="artifact-row">
-          <div class="artifact-name">Telemetry Data</div>
-          <div class="artifact-ext">metrics.json</div>
-          <div class="artifact-desc">Raw numerical measurements, convergence histories, and benchmark timings.</div>
+
+        <div class="artifact-card">
+          <div class="artifact-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h4 class="artifact-title">Academic HTML</h4>
+          <div class="artifact-ext">paper.html</div>
+          <p class="artifact-desc">Standalone, responsive HTML research report readable in any web browser without third-party plugins.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 04 // Quickstart -->
+  <!-- Quickstart -->
   <section class="section" id="quickstart">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">04 // Deployment</span>
-        <h2 class="section-title">Quickstart Setup</h2>
+        <span class="section-tag">Quickstart</span>
+        <h2 class="section-title">Get Started in 60 Seconds</h2>
         <p class="section-desc">
-          Install the CLI, configure compute routing, and initiate your first autonomous computational experiment.
+          Install the CLI on your machine and launch your first computational scientific experiment.
         </p>
       </div>
 
-      <div class="quickstart-steps">
-        <div class="qs-step">
-          <div class="qs-num">01</div>
-          <div class="qs-body">
-            <div class="qs-title">Install Repository</div>
-            <div class="qs-desc">Clone the repository and install dependencies in editable mode:</div>
-            <div class="qs-code-box">
+      <div class="quickstart-flow">
+        <!-- Step 1 -->
+        <div class="qs-card">
+          <div class="qs-number">01</div>
+          <div class="qs-main">
+            <h4 class="qs-heading">Clone or Install the CLI</h4>
+            <p class="qs-paragraph">Install via git or editable pip mode into your virtual environment:</p>
+            <div class="qs-code">
               <code id="qs1">git clone https://github.com/venstqs/XavierLabs-AI.git &amp;&amp; cd XavierLabs-AI &amp;&amp; pip install -e .</code>
-              <button class="btn-copy-strip" data-copy-target="qs1">Copy</button>
+              <button class="btn-copy" data-copy-target="qs1">Copy</button>
             </div>
           </div>
         </div>
 
-        <div class="qs-step">
-          <div class="qs-num">02</div>
-          <div class="qs-body">
-            <div class="qs-title">Configure Provider Keys</div>
-            <div class="qs-desc">Set your LLM provider key (Gemini, OpenAI) or connect local Ollama models:</div>
-            <div class="qs-code-box">
+        <!-- Step 2 -->
+        <div class="qs-card">
+          <div class="qs-number">02</div>
+          <div class="qs-main">
+            <h4 class="qs-heading">Configure Provider Keys</h4>
+            <p class="qs-paragraph">Set your cloud provider key (Gemini, OpenAI) or connect local Ollama models:</p>
+            <div class="qs-code">
               <code id="qs2">echo "GEMINI_API_KEY=your_key_here" &gt; .env</code>
-              <button class="btn-copy-strip" data-copy-target="qs2">Copy</button>
+              <button class="btn-copy" data-copy-target="qs2">Copy</button>
             </div>
           </div>
         </div>
 
-        <div class="qs-step">
-          <div class="qs-num">03</div>
-          <div class="qs-body">
-            <div class="qs-title">Initiate Research Loop</div>
-            <div class="qs-desc">Pass a scientific topic to trigger the autonomous multi-agent swarm:</div>
-            <div class="qs-code-box">
+        <!-- Step 3 -->
+        <div class="qs-card">
+          <div class="qs-number">03</div>
+          <div class="qs-main">
+            <h4 class="qs-heading">Initiate Research Loop</h4>
+            <p class="qs-paragraph">Provide any scientific topic or algorithmic comparison to trigger the swarm:</p>
+            <div class="qs-code">
               <code id="qs3">xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"</code>
-              <button class="btn-copy-strip" data-copy-target="qs3">Copy</button>
+              <button class="btn-copy" data-copy-target="qs3">Copy</button>
             </div>
           </div>
         </div>
 
-        <div class="qs-step">
-          <div class="qs-num">04</div>
-          <div class="qs-body">
-            <div class="qs-title">Inspect Research Paper</div>
-            <div class="qs-desc">View generated paper formats and open the PDF automatically:</div>
-            <div class="qs-code-box">
+        <!-- Step 4 -->
+        <div class="qs-card">
+          <div class="qs-number">04</div>
+          <div class="qs-main">
+            <h4 class="qs-heading">Inspect Research Paper</h4>
+            <p class="qs-paragraph">View all generated paper formats and open the PDF automatically in your browser:</p>
+            <div class="qs-code">
               <code id="qs4">xavier paper experiments/your_experiment_folder --open</code>
-              <button class="btn-copy-strip" data-copy-target="qs4">Copy</button>
+              <button class="btn-copy" data-copy-target="qs4">Copy</button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-area">
+    <div class="container">
+      <h2>Automate Digital Scientific Discovery</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px auto; font-size: 1.05rem;">
+        XavierLabs AI is open source under the MIT License. Star the project on GitHub or join our community.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" class="btn-primary">
+          <span>Star on GitHub ★</span>
+        </a>
+        <a href="#overview" class="btn-secondary">
+          <span>Back to Top ↑</span>
+        </a>
       </div>
     </div>
   </section>
@@ -342,18 +451,18 @@ Patch applied: target.squeeze(-1)</span>
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
-      <div class="footer-left">
-        xavierlabs-ai // MIT License // Created by <a href="https://github.com/venstqs" target="_blank">@venstqs</a>
+      <div class="footer-copy">
+        xavierlabs-ai // MIT License // Created by <a href="https://github.com/venstqs" target="_blank" style="color: var(--sage); text-decoration: none;">@venstqs</a>
       </div>
       <div class="footer-links">
-        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank">GitHub ↗</a>
-        <a href="https://github.com/venstqs/XavierLabs-AI/blob/main/README.md" target="_blank">Documentation ↗</a>
-        <a href="https://github.com/venstqs/XavierLabs-AI/issues" target="_blank">Issues ↗</a>
+        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank">GitHub</a>
+        <a href="https://github.com/venstqs/XavierLabs-AI/blob/main/README.md" target="_blank">Documentation</a>
+        <a href="https://github.com/venstqs/XavierLabs-AI/issues" target="_blank">Issues</a>
       </div>
     </div>
   </footer>
 
-  <!-- Toast Notification -->
+  <!-- Toast -->
   <div class="toast" id="toast">Copied to clipboard.</div>
 
   <script src="app.js"></script>

@@ -1,14 +1,27 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/",
-      "destination": "/docs/index.html"
+      "src": "docs/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/docs/assets/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/docs/$1"
+      "src": "/style.css",
+      "dest": "/docs/style.css"
+    },
+    {
+      "src": "/app.js",
+      "dest": "/docs/app.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/docs/index.html"
     }
   ]
 }

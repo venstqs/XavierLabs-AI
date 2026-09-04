@@ -69,9 +69,9 @@ class LLMRouter:
             else:
                 return settings.DEFAULT_MODEL
 
-        # Priority 1: Groq (ultra-fast inference)
+        # Priority 1: Groq (ultra-fast inference with high token limits)
         if os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY:
-            return "groq/qwen/qwen3.8-27b"
+            return "groq/groq/compound-mini"
 
         # Priority 2: OpenRouter (universal access to DeepSeek, Claude, Llama, Qwen, etc.)
         if os.environ.get("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY:
@@ -206,8 +206,24 @@ class LLMRouter:
             return content or ""
         except Exception as e:
             err_str = str(e)
+            # Automatic fallback if a Groq model hits OTPM (Output Tokens Per Minute) free-tier limit
+            if ("RateLimitError" in err_str or "rate_limit_exceeded" in err_str) and model.startswith("groq/") and model != "groq/groq/compound-mini":
+                try:
+                    kwargs["model"] = "groq/groq/compound-mini"
+                    fallback_res = completion(**kwargs)
+                    fallback_content = fallback_res.choices[0].message.content
+                    return fallback_content or ""
+                except Exception:
+                    pass
+
             hint = ""
-            if "API key" in err_str or "AuthenticationError" in err_str:
+            if "RateLimitError" in err_str or "rate_limit_exceeded" in err_str:
+                hint = (
+                    "\n[Rate Limit Hint] The free tier token limit was reached for this model.\n"
+                    "Wait 30-60 seconds, or switch to another provider: OpenRouter (OPENROUTER_API_KEY), "
+                    "DeepSeek (DEEPSEEK_API_KEY), Gemini (GEMINI_API_KEY), or 100% offline Ollama (`ollama run deepseek-r1`)."
+                )
+            elif "API key" in err_str or "AuthenticationError" in err_str:
                 hint = (
                     "\n[Hint] Make sure your API key is set in .env or environment.\n"
                     "You can use ANY provider: OpenRouter (OPENROUTER_API_KEY), DeepSeek (DEEPSEEK_API_KEY), "

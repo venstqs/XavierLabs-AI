@@ -338,29 +338,53 @@ nav.header-nav a:hover {
 .term-dim { color: var(--fg-dim); }
 .term-bold { font-weight: bold; }
 
-/* 3-Column Simple Features */
+/* Clean Feature Cards Grid */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 60px;
+  gap: 16px;
+  margin-bottom: 50px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
   .features-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.feature-col h3 {
-  font-size: 16px;
+.feature-col {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px 20px;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-col:hover {
+  border-color: var(--sage-border);
+  transform: translateY(-2px);
+}
+
+.feature-idx {
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
-  color: var(--fg);
+  color: var(--sage);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.feature-col h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
   margin-bottom: 8px;
 }
 
 .feature-col p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--fg-muted);
   line-height: 1.6;
 }

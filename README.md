@@ -1,14 +1,8 @@
 <div align="center">
 
-```
-                        █                   ██           █            
-                                             █           █            
- █   █   ████  ██ ██   ██     ███   █ ██     █     ████  ████    ████ 
-  █ █   █   █   █ █     █    █   █  ██       █    █   █  █   █  █     
-   █    █   █   █ █     █    █████  █        █    █   █  █   █   ███  
-  █ █   █  ██    █      █    █      █        █    █  ██  █   █      █ 
- █   █   ██ █    █     ███    ███   █       ███    ██ █  ████   ████  
-```
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="xavierlabs" width="700" />
+</p>
 
 ### **Autonomous, Terminal-Native Computational Scientific Research Swarm**
 

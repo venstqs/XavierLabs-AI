@@ -23,27 +23,74 @@ class LLMRouter:
 
     def _sync_env_keys(self):
         """Ensures configured API keys are available in environment for LiteLLM."""
-        if settings.GEMINI_API_KEY and not os.environ.get("GEMINI_API_KEY"):
-            os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
-        if settings.OPENAI_API_KEY and not os.environ.get("OPENAI_API_KEY"):
-            os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-        if settings.ANTHROPIC_API_KEY and not os.environ.get("ANTHROPIC_API_KEY"):
-            os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
-        if settings.GROQ_API_KEY and not os.environ.get("GROQ_API_KEY"):
-            os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
+        key_mappings = {
+            "OPENROUTER_API_KEY": settings.OPENROUTER_API_KEY,
+            "DEEPSEEK_API_KEY": settings.DEEPSEEK_API_KEY,
+            "GEMINI_API_KEY": settings.GEMINI_API_KEY,
+            "OPENAI_API_KEY": settings.OPENAI_API_KEY,
+            "ANTHROPIC_API_KEY": settings.ANTHROPIC_API_KEY,
+            "GROQ_API_KEY": settings.GROQ_API_KEY,
+            "OPENAI_API_BASE": settings.OPENAI_API_BASE,
+        }
+        for env_var, setting_val in key_mappings.items():
+            if setting_val and not os.environ.get(env_var):
+                os.environ[env_var] = setting_val
+
+    def resolve_auto_model(self) -> str:
+        """
+        Auto-detects the optimal model based on available API keys or local services.
+        Ensures users can use OpenRouter, DeepSeek, Groq, local Ollama, etc. seamlessly.
+        """
+        if settings.DEFAULT_MODEL and settings.DEFAULT_MODEL.lower() != "auto":
+            return settings.DEFAULT_MODEL
+
+        # Priority 1: OpenRouter (universal access to DeepSeek, Claude, Llama, Qwen, etc.)
+        if os.environ.get("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY:
+            return "openrouter/deepseek/deepseek-chat"
+
+        # Priority 2: DeepSeek Direct
+        if os.environ.get("DEEPSEEK_API_KEY") or settings.DEEPSEEK_API_KEY:
+            return "deepseek/deepseek-chat"
+
+        # Priority 3: Groq (ultra-fast inference)
+        if os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY:
+            return "groq/llama-3.3-70b-versatile"
+
+        # Priority 4: OpenAI
+        if os.environ.get("OPENAI_API_KEY") or settings.OPENAI_API_KEY:
+            return "gpt-4o-mini"
+
+        # Priority 5: Anthropic Claude
+        if os.environ.get("ANTHROPIC_API_KEY") or settings.ANTHROPIC_API_KEY:
+            return "claude-3-5-haiku-20241022"
+
+        # Priority 6: Custom local OpenAI-compatible endpoint (LM Studio, OpenCode, vLLM)
+        if os.environ.get("OPENAI_API_BASE") or settings.OPENAI_API_BASE:
+            return "openai/default"
+
+        # Priority 7: Google Gemini
+        if os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY:
+            return "gemini/gemini-2.5-flash"
+
+        # Default fallback
+        return "gemini/gemini-2.5-flash"
 
     def get_model_for_role(self, role: str) -> str:
         """Returns the configured model string for a given agent role."""
         role_lower = role.lower()
+        configured = settings.IDEATOR_MODEL
         if role_lower == "ideator":
-            return settings.IDEATOR_MODEL
+            configured = settings.IDEATOR_MODEL
         elif role_lower == "reviewer":
-            return settings.REVIEWER_MODEL
+            configured = settings.REVIEWER_MODEL
         elif role_lower == "coder":
-            return settings.CODER_MODEL
+            configured = settings.CODER_MODEL
         elif role_lower == "synthesizer":
-            return settings.SYNTHESIZER_MODEL
-        return settings.IDEATOR_MODEL
+            configured = settings.SYNTHESIZER_MODEL
+
+        if configured == "auto" or not configured:
+            return self.resolve_auto_model()
+        return configured
 
     def generate(
         self,
@@ -75,15 +122,25 @@ class LLMRouter:
         # If targeting Ollama, attach api_base if configured
         if model.startswith("ollama/"):
             kwargs["api_base"] = settings.OLLAMA_API_BASE
+        elif settings.OPENAI_API_BASE and (model.startswith("openai/") or "/" not in model):
+            kwargs["api_base"] = settings.OPENAI_API_BASE
 
         try:
             response = completion(**kwargs)
             content = response.choices[0].message.content
             return content or ""
         except Exception as e:
-            # Provide clear diagnostic context
+            err_str = str(e)
+            hint = ""
+            if "API key" in err_str or "AuthenticationError" in err_str:
+                hint = (
+                    "\n[Hint] Make sure your API key is set in .env or environment.\n"
+                    "You can use ANY provider: OpenRouter (OPENROUTER_API_KEY), DeepSeek (DEEPSEEK_API_KEY), "
+                    "Groq (GROQ_API_KEY), Gemini (GEMINI_API_KEY), OpenAI (OPENAI_API_KEY), Anthropic (ANTHROPIC_API_KEY), "
+                    "or run 100% offline with Ollama (ollama/deepseek-r1)."
+                )
             raise RuntimeError(
-                f"[LLMRouter Error] Failed to generate completion using role='{role}' (model='{model}'): {str(e)}"
+                f"[LLMRouter Error] Failed to generate completion using role='{role}' (model='{model}'): {err_str}{hint}"
             ) from e
 
     def generate_json(

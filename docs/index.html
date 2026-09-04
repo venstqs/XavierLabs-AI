@@ -112,8 +112,10 @@
         <span class="comment"># 1. Install the CLI</span><br>
         <span class="cmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</span><br><br>
 
-        <span class="comment"># 2. Add your LLM provider key</span><br>
-        <span class="cmd">echo "GEMINI_API_KEY=your_key_here" &gt; .env</span><br><br>
+        <span class="comment"># 2. Add your LLM provider (OpenRouter, DeepSeek, Ollama, Gemini, etc.)</span><br>
+        <span class="cmd">echo "OPENROUTER_API_KEY=sk-or-..." &gt; .env</span><br>
+        <span class="comment"># or: echo "DEEPSEEK_API_KEY=sk-..." &gt; .env</span><br>
+        <span class="comment"># or 100% offline: ollama run deepseek-r1 (no key required!)</span><br><br>
 
         <span class="comment"># 3. Run autonomous research on any topic</span><br>
         <span class="cmd">xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"</span><br><br>

@@ -127,11 +127,14 @@ def show_config():
     ui.print_banner()
     sandbox, sandbox_desc = get_sandbox()
 
+    from xavierlabs.llm.router import router
+
     table = Table(title="[bold cyan]XavierLabs AI Configuration & Compute Telemetry[/bold cyan]", show_header=True)
     table.add_column("Component", style="dim", width=25)
     table.add_column("Configured Value", style="white")
 
     table.add_row("Execution Sandbox", f"[bold green]{sandbox_desc}[/bold green]")
+    table.add_row("Active/Auto Model", f"[bold cyan]{router.resolve_auto_model()}[/bold cyan]")
     table.add_row("Ideator Model", settings.IDEATOR_MODEL)
     table.add_row("Reviewer Model", settings.REVIEWER_MODEL)
     table.add_row("Coder Model", settings.CODER_MODEL)
@@ -141,10 +144,18 @@ def show_config():
     table.add_row("Database Engine", f"SQLite ({settings.DB_PATH})")
     table.add_row("Workspace Dir", str(settings.WORKSPACE_DIR.resolve()))
 
-    gemini_status = "[green]Detected[/green]" if settings.GEMINI_API_KEY else "[yellow]Not set[/yellow]"
-    openai_status = "[green]Detected[/green]" if settings.OPENAI_API_KEY else "[yellow]Not set[/yellow]"
-    table.add_row("GEMINI_API_KEY", gemini_status)
-    table.add_row("OPENAI_API_KEY", openai_status)
+    def get_status(key_val: Optional[str]) -> str:
+        return "[green]Detected[/green]" if key_val else "[dim]Not set[/dim]"
+
+    table.add_row("OPENROUTER_API_KEY", get_status(settings.OPENROUTER_API_KEY))
+    table.add_row("DEEPSEEK_API_KEY", get_status(settings.DEEPSEEK_API_KEY))
+    table.add_row("GROQ_API_KEY", get_status(settings.GROQ_API_KEY))
+    table.add_row("OPENAI_API_KEY", get_status(settings.OPENAI_API_KEY))
+    table.add_row("ANTHROPIC_API_KEY", get_status(settings.ANTHROPIC_API_KEY))
+    table.add_row("GEMINI_API_KEY", get_status(settings.GEMINI_API_KEY))
+    if settings.OPENAI_API_BASE:
+        table.add_row("OPENAI_API_BASE", f"[green]{settings.OPENAI_API_BASE}[/green]")
+    table.add_row("OLLAMA_API_BASE", settings.OLLAMA_API_BASE)
 
     ui.console.print(table)
 

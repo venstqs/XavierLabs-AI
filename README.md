@@ -59,8 +59,13 @@ XavierLabs AI is an autonomous, terminal-native research engine designed to exec
 
 ## Key Features
 
-### 1. Hybrid Compute Routing (LiteLLM)
-Route lightweight logic (Reviewer/Auditor) to local models via **Ollama** (`ollama/deepseek-r1`, `ollama/llama3.2`) to minimize API latency and costs, while routing complex code generation and manuscript synthesis to cloud frontier models (Google Gemini `gemini-2.5-flash`, OpenAI `gpt-4o`, Claude).
+### 1. Universal Model & Provider Routing (LiteLLM)
+Use **ANY** AI provider or local runner:
+- **OpenRouter** (`OPENROUTER_API_KEY`): Access 100+ models (DeepSeek R1, Claude 3.5 Sonnet, Llama 3.3, Qwen 2.5) with one key.
+- **DeepSeek Direct** (`DEEPSEEK_API_KEY`): Direct API for `deepseek-chat` and `deepseek-reasoner`.
+- **Local Ollama** (Zero API keys needed!): Run completely offline with `ollama/deepseek-r1` or `ollama/qwen2.5-coder`.
+- **OpenCode & Local Endpoints** (`OPENAI_API_BASE`): Connect LM Studio, vLLM, LocalAI, or custom OpenAI-compatible servers.
+- **Frontier Providers**: Native support for **Google Gemini**, **Groq**, **OpenAI**, and **Anthropic Claude**.
 
 ### 2. Dual Sandbox Engine with Auto-Debugging
 - **Docker SDK Sandbox**: Containment inside ephemeral containers mounting the experiment workspace.
@@ -100,28 +105,28 @@ pip install -e .
 
 ## Configuration (`.env`)
 
-Copy the `.env.example` file to `.env` and set your API keys:
+Copy the `.env.example` file to `.env` and set whichever key you prefer:
 
 ```bash
 cp .env.example .env
 ```
 
-Example configuration:
+Example options (choose any one):
 ```env
-# Cloud Model Keys
+# Option A: OpenRouter (DeepSeek, Claude, Llama 3)
+OPENROUTER_API_KEY=sk-or-v1-...
+
+# Option B: DeepSeek Direct API
+DEEPSEEK_API_KEY=sk-...
+
+# Option C: 100% Free Local Offline (Ollama - NO KEYS NEEDED)
+# OLLAMA_API_BASE=http://localhost:11434
+# DEFAULT_MODEL=ollama/deepseek-r1
+
+# Option D: Google Gemini / OpenAI / Anthropic / Groq
 GEMINI_API_KEY=AIzaSy...
-OPENAI_API_KEY=
-
-# Hybrid Compute Routing
-IDEATOR_MODEL=gemini/gemini-2.5-flash
-REVIEWER_MODEL=gemini/gemini-2.5-flash
-CODER_MODEL=gemini/gemini-2.5-flash
-SYNTHESIZER_MODEL=gemini/gemini-2.5-flash
-
-# Execution Sandbox: auto | docker | local
-SANDBOX_MODE=auto
-EXECUTION_TIMEOUT=180
-MAX_DEBUG_RETRIES=3
+# or: OPENAI_API_KEY=sk-...
+# or: GROQ_API_KEY=gsk_...
 ```
 
 ---

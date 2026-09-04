@@ -11,18 +11,33 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    # API Keys
+    # API Keys & Endpoints (Use ANY provider you want, or 100% local Ollama/OpenCode)
+    OPENROUTER_API_KEY: Optional[str] = None
+    DEEPSEEK_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
     TAVILY_API_KEY: Optional[str] = None
 
-    # Model Routing (via LiteLLM syntax, e.g., 'gemini/gemini-2.5-flash', 'ollama/deepseek-r1', 'gpt-4o-mini')
-    IDEATOR_MODEL: str = "gemini/gemini-2.5-flash"
-    REVIEWER_MODEL: str = "gemini/gemini-2.5-flash"
-    CODER_MODEL: str = "gemini/gemini-2.5-flash"
-    SYNTHESIZER_MODEL: str = "gemini/gemini-2.5-flash"
+    # Custom / Local OpenAI-compatible API base (e.g. LM Studio, vLLM, OpenCode, LocalAI)
+    OPENAI_API_BASE: Optional[str] = None
+
+    # Universal model override (if set, applies to all agents unless overridden per role)
+    DEFAULT_MODEL: Optional[str] = None
+
+    # Model Routing (via LiteLLM syntax, e.g.:
+    #   'openrouter/deepseek/deepseek-r1',
+    #   'deepseek/deepseek-chat',
+    #   'ollama/deepseek-r1',
+    #   'groq/llama-3.3-70b-versatile',
+    #   'gemini/gemini-2.5-flash',
+    #   'gpt-4o-mini',
+    #   'openai/custom-model')
+    IDEATOR_MODEL: str = "auto"
+    REVIEWER_MODEL: str = "auto"
+    CODER_MODEL: str = "auto"
+    SYNTHESIZER_MODEL: str = "auto"
 
     # Execution Sandbox Settings
     SANDBOX_MODE: Literal["auto", "docker", "local"] = "auto"

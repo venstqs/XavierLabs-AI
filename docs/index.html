@@ -24,6 +24,7 @@
       <nav class="header-nav">
         <a href="#demo">demo</a>
         <a href="#features">features</a>
+        <a href="#commands">commands</a>
         <a href="#quickstart">quickstart</a>
         <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" class="btn-github-nav">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -82,27 +83,60 @@
       </div>
     </section>
 
-    <!-- 3 Simple Features -->
+    <!-- Simple Features Grid -->
     <section class="features-grid" id="features">
       <div class="feature-col">
         <h3>Literature &amp; Hypothesis</h3>
         <p>
-          Queries ArXiv and Semantic Scholar without paid API keys. Cross-references papers with your local workspace and formulates mathematically testable hypotheses.
+          Queries ArXiv and Semantic Scholar without paid API keys. Identifies open gaps in computational research and formulates mathematically testable hypotheses.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <h3>Adversarial Peer Review</h3>
+        <p>
+          Simulates an expert peer reviewer to critique mathematical soundness and feasibility before code runs. Scores proposals from 1 to 10 and rejects ill-posed formulations.
         </p>
       </div>
 
       <div class="feature-col">
         <h3>Sandboxed Auto-Debugger</h3>
         <p>
-          Runs generated simulations in Docker or isolated local sandboxes. When code crashes, it traps the exact traceback and autonomously repairs the script.
+          Runs generated simulations in Docker or isolated local sandboxes. When code crashes, it intercepts the stderr traceback and autonomously rewrites and repairs the script.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <h3>Empirical Verification</h3>
+        <p>
+          Writes self-contained scientific Python simulations (NumPy, SciPy). Fixes deterministic seeds and outputs hard computed results to <code>metrics.json</code>.
         </p>
       </div>
 
       <div class="feature-col">
         <h3>Publication-Ready Papers</h3>
         <p>
-          Renders high-DPI scientific charts and compiles complete academic manuscripts in LaTeX (.tex), publication PDFs (.pdf), and interactive HTML.
+          Renders 300-DPI Seaborn figures and compiles complete academic manuscripts in LaTeX (<code>paper.tex</code>), camera-ready PDFs (<code>paper.pdf</code>), and Markdown.
         </p>
+      </div>
+
+      <div class="feature-col">
+        <h3>Universal Model Support</h3>
+        <p>
+          Connect Groq for sub-second execution, DeepSeek for mathematical reasoning, OpenRouter for 100+ models, or run 100% privately and offline via local Ollama.
+        </p>
+      </div>
+    </section>
+
+    <!-- CLI Commands Reference -->
+    <section class="workflow-box" id="commands">
+      <div class="workflow-header">// CLI COMMANDS &amp; WORKFLOW</div>
+      <div class="workflow-code">
+        <span class="cmd">xavier</span> <span class="comment"># Start interactive chatbot console (Antigravity CLI style)</span><br>
+        <span class="cmd">xavier research "Your research inquiry"</span> <span class="comment"># Run autonomous end-to-end loop</span><br>
+        <span class="cmd">xavier paper experiments/your_folder --open</span> <span class="comment"># View and open compiled PDF / LaTeX paper</span><br>
+        <span class="cmd">xavier history</span> <span class="comment"># Browse audit trail of past computational experiments</span><br>
+        <span class="cmd">xavier config</span> <span class="comment"># Inspect active LLM model, detected API keys, and sandbox</span>
       </div>
     </section>
 
@@ -113,15 +147,18 @@
         <span class="comment"># 1. Install the CLI</span><br>
         <span class="cmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</span><br><br>
 
-        <span class="comment"># 2. Add your LLM provider (OpenRouter, DeepSeek, Ollama, Gemini, etc.)</span><br>
-        <span class="cmd">echo "OPENROUTER_API_KEY=sk-or-..." &gt; .env</span><br>
+        <span class="comment"># 2. Add your LLM provider (Groq, DeepSeek, OpenRouter, or Ollama)</span><br>
+        <span class="cmd">echo "GROQ_API_KEY=gsk_..." &gt; .env</span><br>
         <span class="comment"># or: echo "DEEPSEEK_API_KEY=sk-..." &gt; .env</span><br>
-        <span class="comment"># 3. Start interactive chatbot mode (Antigravity CLI style)</span><br>
-        <span class="cmd">xavier</span><br>
-        <span class="comment"># Or run direct one-liner autonomous research</span><br>
+        <span class="comment"># or: echo "OPENROUTER_API_KEY=sk-or-..." &gt; .env</span><br><br>
+
+        <span class="comment"># 3. Launch interactive chatbot mode</span><br>
+        <span class="cmd">xavier</span><br><br>
+
+        <span class="comment"># 4. Or run direct one-liner autonomous research</span><br>
         <span class="cmd">xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"</span><br><br>
 
-        <span class="comment"># 4. View and open the compiled research paper</span><br>
+        <span class="comment"># 5. View and open the compiled research paper</span><br>
         <span class="cmd">xavier paper experiments/your_experiment_folder --open</span>
       </div>
     </section>

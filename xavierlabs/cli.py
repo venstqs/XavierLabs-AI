@@ -23,10 +23,25 @@ app = typer.Typer(
 
 @app.callback(invoke_without_command=True)
 def main_callback(ctx: typer.Context):
-    """Main callback to show banner if no subcommand provided."""
+    """Main callback: starts the interactive chatbot session if no subcommand provided."""
     if ctx.invoked_subcommand is None:
-        ui.print_banner()
-        ui.console.print("[yellow]Use [bold]xavier --help[/bold] to see available commands.[/yellow]")
+        if not sys.stdin.isatty() and not os.environ.get("XAVIER_FORCE_INTERACTIVE"):
+            ui.print_banner()
+            ui.console.print("[yellow]Use [bold]xavier --help[/bold] to see available commands.[/yellow]")
+            return
+        from xavierlabs.ui.chat import ChatSession
+        session = ChatSession()
+        session.start()
+
+
+@app.command(name="chat")
+def start_chat():
+    """
+    Launch the interactive conversational scientific research chatbot (Antigravity CLI-style).
+    """
+    from xavierlabs.ui.chat import ChatSession
+    session = ChatSession()
+    session.start()
 
 
 @app.command(name="research")

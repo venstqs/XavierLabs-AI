@@ -69,7 +69,8 @@
             <div class="dot green"></div>
           </div>
           <div class="terminal-tabs">
-            <button class="term-tab active" data-cmd="research">xavier research</button>
+            <button class="term-tab active" data-cmd="chat">xavier chat</button>
+            <button class="term-tab" data-cmd="research">xavier research</button>
             <button class="term-tab" data-cmd="paper">xavier paper</button>
             <button class="term-tab" data-cmd="history">xavier history</button>
             <button class="term-tab" data-cmd="config">xavier config</button>
@@ -115,9 +116,9 @@
         <span class="comment"># 2. Add your LLM provider (OpenRouter, DeepSeek, Ollama, Gemini, etc.)</span><br>
         <span class="cmd">echo "OPENROUTER_API_KEY=sk-or-..." &gt; .env</span><br>
         <span class="comment"># or: echo "DEEPSEEK_API_KEY=sk-..." &gt; .env</span><br>
-        <span class="comment"># or 100% offline: ollama run deepseek-r1 (no key required!)</span><br><br>
-
-        <span class="comment"># 3. Run autonomous research on any topic</span><br>
+        <span class="comment"># 3. Start interactive chatbot mode (Antigravity CLI style)</span><br>
+        <span class="cmd">xavier</span><br>
+        <span class="comment"># Or run direct one-liner autonomous research</span><br>
         <span class="cmd">xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"</span><br><br>
 
         <span class="comment"># 4. View and open the compiled research paper</span><br>

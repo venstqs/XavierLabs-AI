@@ -131,11 +131,31 @@ GEMINI_API_KEY=AIzaSy...
 
 ---
 
-## CLI Commands
+## CLI Usage & Interactive Modes
 
-### 1. Run Autonomous End-to-End Research
+### 1. Interactive Chatbot Mode (Antigravity CLI-Style)
+Launch an interactive scientific research companion in your terminal:
 ```bash
-# Trigger the complete agentic loop
+xavier
+# or: xavier chat
+```
+- **Conversational Ideation**: Chat conversationally about research ideas, optimizer algorithms, or physics simulations before running them.
+- **Visual State Indicator**: The prompt tells you your current mode and active research (`xavier [ready] › ` vs `xavier [researching: nanotechnology...] › `).
+- **Slash Commands**:
+  - `/research <topic>` - Launch autonomous swarm execution
+  - `/paper` - Inspect recent papers or open PDFs interactively
+  - `/history` - View past experiment records
+  - `/model` - Switch models on the fly (OpenRouter, DeepSeek, Ollama, Gemini)
+  - `/config` - View active keys and telemetry
+  - `/clear` - Clear screen
+  - `/help` - Show all commands
+  - `/exit` - Quit session
+
+---
+
+### 2. Direct Autonomous Research (One-Liner)
+```bash
+# Trigger the complete agentic loop directly
 xavier research "Investigate sparse attention vs full attention scaling on synthetic sequences"
 
 # Ingest an existing codebase or dataset

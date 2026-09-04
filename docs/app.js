@@ -20,6 +20,15 @@ const PIXEL_BANNER = `
 `;
 
 const DEMO_SCRIPTS = {
+  chat: [
+    { text: 'xavier', delay: 30, isInput: true },
+    { text: '\n[bold green]XavierLabs AI Interactive Console[/bold green]\n[dim]Active Model: openrouter/deepseek/deepseek-r1 | Sandbox: Local Subprocess[/dim]\n\n', delay: 100 },
+    { text: '[bold #9ec97b]xavier[/bold #9ec97b] [dim]›[/dim] /help\n', delay: 35, isInput: true },
+    { text: '┌────────────────────────┬─────────────────────────────────────────────────┐\n│ Command                │ Description                                     │\n├────────────────────────┼─────────────────────────────────────────────────┤\n│ /research <topic>      │ Launch autonomous research loop                 │\n│ /paper [folder]        │ Inspect or open compiled research paper         │\n│ /history               │ Browse and inspect past experiment records      │\n│ /model [name]          │ Switch model (OpenRouter, DeepSeek, Ollama)     │\n│ /config                │ View compute telemetry & detected API keys      │\n│ /exit                  │ Exit interactive session                        │\n└────────────────────────┴─────────────────────────────────────────────────┘\n\n', delay: 150 },
+    { text: '[bold #9ec97b]xavier[/bold #9ec97b] [dim]›[/dim] I want to study sparse attention on non-convex loss\n', delay: 35, isInput: true },
+    { text: '[cyan bold]● THE IDEATOR[/cyan bold] Analyzing hypothesis novelty and testable metrics...\n  • Proposed hypothesis: Sparse top-k attention stabilizes gradient variance by ~34%.\n\n[bold green]Would you like XavierLabs to launch an autonomous research run on this topic now? [Y/n]:[/bold green] y\n', delay: 200 },
+    { text: '\n[bold #9ec97b]▶ Launching Autonomous Research Swarm...[/bold #9ec97b]\n  [green]✔ Swarm active: literature -> code -> auto-debug -> LaTeX paper[/green]\n', delay: 100 }
+  ],
   research: [
     { text: 'xavier research "Analyze convergence of AdamW vs Lion on non-convex loss"', delay: 30, isInput: true },
     { text: '\n[bold green]Execution Sandbox:[/bold green] Local Isolated Subprocess Sandbox\n', delay: 120 },
@@ -239,8 +248,8 @@ function initTerminal() {
     });
   });
 
-  // Load initial research demo
-  runTerminalDemo('research');
+  // Load initial interactive chat demo
+  runTerminalDemo('chat');
 }
 
 // 5. App Initialization

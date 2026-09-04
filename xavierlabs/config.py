@@ -6,9 +6,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            ".env",
+            str(Path.home() / ".xavierlabs" / ".env"),
+            str(Path.home() / ".env"),
+        ),
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
     )
 
     # API Keys & Endpoints (Use ANY provider you want, or 100% local Ollama/OpenCode)

@@ -92,6 +92,46 @@ class LLMRouter:
             return self.resolve_auto_model()
         return configured
 
+    def validate_provider_keys(self, model: str) -> Optional[str]:
+        """
+        Validates that credentials exist for the chosen model before firing an HTTP request.
+        Returns None if valid, or a descriptive error string if missing.
+        """
+        model_lower = model.lower()
+
+        # Local Ollama or custom local base require no external keys
+        if model_lower.startswith("ollama/") or settings.OPENAI_API_BASE:
+            return None
+
+        if model_lower.startswith("openrouter/") and not (os.environ.get("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY):
+            return "Missing OPENROUTER_API_KEY. Please set OPENROUTER_API_KEY in your .env file."
+
+        if model_lower.startswith("deepseek/") and not (os.environ.get("DEEPSEEK_API_KEY") or settings.DEEPSEEK_API_KEY):
+            return "Missing DEEPSEEK_API_KEY. Please set DEEPSEEK_API_KEY in your .env file."
+
+        if model_lower.startswith("groq/") and not (os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY):
+            return "Missing GROQ_API_KEY. Please set GROQ_API_KEY in your .env file."
+
+        if (model_lower.startswith("gpt-") or model_lower.startswith("openai/")) and not (os.environ.get("OPENAI_API_KEY") or settings.OPENAI_API_KEY):
+            return "Missing OPENAI_API_KEY. Please set OPENAI_API_KEY in your .env file."
+
+        if (model_lower.startswith("claude-") or model_lower.startswith("anthropic/")) and not (os.environ.get("ANTHROPIC_API_KEY") or settings.ANTHROPIC_API_KEY):
+            return "Missing ANTHROPIC_API_KEY. Please set ANTHROPIC_API_KEY in your .env file."
+
+        if model_lower.startswith("gemini/") and not (os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY):
+            return (
+                "No active LLM API key detected!\n"
+                "XavierLabs defaulted to 'gemini/gemini-2.5-flash', but GEMINI_API_KEY is not set.\n\n"
+                "You can use ANY provider you prefer:\n"
+                "  • OpenRouter: echo \"OPENROUTER_API_KEY=sk-or-...\" > .env\n"
+                "  • DeepSeek:   echo \"DEEPSEEK_API_KEY=sk-...\" > .env\n"
+                "  • Ollama:     ollama run deepseek-r1 (100% free offline, zero keys needed!)\n"
+                "  • Gemini:     echo \"GEMINI_API_KEY=AIzaSy...\" > .env\n"
+                "  • Groq:       echo \"GROQ_API_KEY=gsk_...\" > .env\n"
+            )
+
+        return None
+
     def generate(
         self,
         role: str,
@@ -106,6 +146,10 @@ class LLMRouter:
         """
         self._sync_env_keys()
         model = model_override or self.get_model_for_role(role)
+
+        validation_err = self.validate_provider_keys(model)
+        if validation_err:
+            raise RuntimeError(validation_err)
 
         messages = [
             {"role": "system", "content": system_prompt},

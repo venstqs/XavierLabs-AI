@@ -46,12 +46,31 @@ def research(
         settings.CODER_MODEL = model
         settings.SYNTHESIZER_MODEL = model
 
-    orchestrator = ResearchOrchestrator()
-    orchestrator.run_research(
-        topic=topic,
-        starting_code_dir=codebase,
-        max_debug_retries=retries,
-    )
+    try:
+        orchestrator = ResearchOrchestrator()
+        orchestrator.run_research(
+            topic=topic,
+            starting_code_dir=codebase,
+            max_debug_retries=retries,
+        )
+    except Exception as e:
+        err_msg = str(e)
+        if "No active LLM API key detected" in err_msg or "Missing " in err_msg or "AuthenticationError" in err_msg or "API_KEY" in err_msg:
+            ui.console.print(Panel(
+                f"[bold red]❌ LLM Provider Authentication Error[/bold red]\n\n"
+                f"{err_msg}\n\n"
+                f"[bold cyan]How to fix:[/bold cyan]\n"
+                f"  • [bold]OpenRouter[/bold]: echo \"OPENROUTER_API_KEY=sk-or-...\" > .env\n"
+                f"  • [bold]DeepSeek[/bold]:   echo \"DEEPSEEK_API_KEY=sk-...\" > .env\n"
+                f"  • [bold]Ollama[/bold]:     ollama run deepseek-r1 (100% free offline, zero keys needed!)\n"
+                f"  • [bold]Google Gemini[/bold]: echo \"GEMINI_API_KEY=AIzaSy...\" > .env\n"
+                f"  • [bold]Groq[/bold]:       echo \"GROQ_API_KEY=gsk_...\" > .env\n\n"
+                f"Run [bold]xavier config[/bold] to check your current keys.",
+                border_style="red"
+            ))
+            raise typer.Exit(code=1)
+        else:
+            raise e
 
 
 @app.command(name="run")

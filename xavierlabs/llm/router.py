@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 from typing import Any, Dict, List, Optional
 import litellm
 from litellm import completion
@@ -9,6 +10,7 @@ from xavierlabs.config import settings
 # Silence unnecessary litellm telemetry in terminal
 litellm.telemetry = False
 litellm.drop_params = True
+litellm.suppress_debug_info = True
 
 
 class LLMRouter:
@@ -200,39 +202,60 @@ class LLMRouter:
         elif settings.OPENAI_API_BASE and (model.startswith("openai/") or "/" not in model):
             kwargs["api_base"] = settings.OPENAI_API_BASE
 
-        try:
-            response = completion(**kwargs)
-            content = response.choices[0].message.content
-            return content or ""
-        except Exception as e:
-            err_str = str(e)
-            # Automatic fallback if a Groq model hits OTPM (Output Tokens Per Minute) free-tier limit
-            if ("RateLimitError" in err_str or "rate_limit_exceeded" in err_str) and model.startswith("groq/") and model != "groq/groq/compound-mini":
-                try:
-                    kwargs["model"] = "groq/groq/compound-mini"
-                    fallback_res = completion(**kwargs)
-                    fallback_content = fallback_res.choices[0].message.content
-                    return fallback_content or ""
-                except Exception:
-                    pass
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = completion(**kwargs)
+                content = response.choices[0].message.content
+                return content or ""
+            except Exception as e:
+                err_str = str(e)
+                is_rate_limit = "RateLimitError" in err_str or "rate_limit_exceeded" in err_str or "429" in err_str
 
-            hint = ""
-            if "RateLimitError" in err_str or "rate_limit_exceeded" in err_str:
-                hint = (
-                    "\n[Rate Limit Hint] The free tier token limit was reached for this model.\n"
-                    "Wait 30-60 seconds, or switch to another provider: OpenRouter (OPENROUTER_API_KEY), "
-                    "DeepSeek (DEEPSEEK_API_KEY), Gemini (GEMINI_API_KEY), or 100% offline Ollama (`ollama run deepseek-r1`)."
-                )
-            elif "API key" in err_str or "AuthenticationError" in err_str:
-                hint = (
-                    "\n[Hint] Make sure your API key is set in .env or environment.\n"
-                    "You can use ANY provider: OpenRouter (OPENROUTER_API_KEY), DeepSeek (DEEPSEEK_API_KEY), "
-                    "Groq (GROQ_API_KEY), Gemini (GEMINI_API_KEY), OpenAI (OPENAI_API_KEY), Anthropic (ANTHROPIC_API_KEY), "
-                    "or run 100% offline with Ollama (ollama/deepseek-r1)."
-                )
-            raise RuntimeError(
-                f"[LLMRouter Error] Failed to generate completion using role='{role}' (model='{model}'): {err_str}{hint}"
-            ) from e
+                # If rate limited, attempt automatic sliding-window wait before failing
+                if is_rate_limit and attempt < max_retries - 1:
+                    match = re.search(r"try again in ([\d\.]+)s", err_str, re.IGNORECASE)
+                    wait_secs = float(match.group(1)) + 1.0 if match else (12.0 * (attempt + 1))
+                    wait_secs = min(max(wait_secs, 3.0), 30.0)
+
+                    try:
+                        from rich.console import Console
+                        c = Console()
+                        c.print(f"[dim yellow]⏳ Provider rate limit reached. Waiting {wait_secs:.1f}s for quota replenishment before resuming...[/dim yellow]")
+                    except Exception:
+                        pass
+
+                    time.sleep(wait_secs)
+                    continue
+
+                # Automatic fallback if a specific Groq model hits OTPM free-tier limit
+                if is_rate_limit and model.startswith("groq/") and model != "groq/groq/compound-mini":
+                    try:
+                        kwargs["model"] = "groq/groq/compound-mini"
+                        fallback_res = completion(**kwargs)
+                        fallback_content = fallback_res.choices[0].message.content
+                        return fallback_content or ""
+                    except Exception:
+                        pass
+
+                hint = ""
+                if is_rate_limit:
+                    hint = (
+                        "\n[Rate Limit Hint] The free tier token limit was reached for this model.\n"
+                        "Wait 30-60 seconds, or switch to another provider: OpenRouter (OPENROUTER_API_KEY), "
+                        "DeepSeek (DEEPSEEK_API_KEY), Gemini (GEMINI_API_KEY), or 100% offline Ollama (`ollama run deepseek-r1`)."
+                    )
+                elif "API key" in err_str or "AuthenticationError" in err_str:
+                    hint = (
+                        "\n[Hint] Make sure your API key is set in .env or environment.\n"
+                        "You can use ANY provider: OpenRouter (OPENROUTER_API_KEY), DeepSeek (DEEPSEEK_API_KEY), "
+                        "Groq (GROQ_API_KEY), Gemini (GEMINI_API_KEY), OpenAI (OPENAI_API_KEY), Anthropic (ANTHROPIC_API_KEY), "
+                        "or run 100% offline with Ollama (ollama/deepseek-r1)."
+                    )
+                raise RuntimeError(
+                    f"[LLMRouter Error] Failed to generate completion using role='{role}' (model='{model}'): {err_str}{hint}"
+                ) from e
+
 
     def generate_json(
         self,

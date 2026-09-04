@@ -45,25 +45,41 @@ class LLMRouter:
         elif os.environ.get("GOOGLE_API_KEY") and not os.environ.get("GEMINI_API_KEY"):
             os.environ["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
+    def is_ollama_reachable(self) -> bool:
+        """Quick check if local Ollama daemon is active and responding."""
+        import urllib.request
+        try:
+            url = f"{settings.OLLAMA_API_BASE}/api/tags"
+            req = urllib.request.Request(url, headers={"User-Agent": "xavierlabs"})
+            with urllib.request.urlopen(req, timeout=0.5) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
+
     def resolve_auto_model(self) -> str:
         """
         Auto-detects the optimal model based on available API keys or local services.
-        Ensures users can use OpenRouter, DeepSeek, Groq, local Ollama, etc. seamlessly.
+        Ensures users can use Groq, OpenRouter, DeepSeek, local Ollama, etc. seamlessly.
         """
+        # If DEFAULT_MODEL is explicitly set to Ollama, check if Ollama is actually reachable
         if settings.DEFAULT_MODEL and settings.DEFAULT_MODEL.lower() != "auto":
-            return settings.DEFAULT_MODEL
+            if settings.DEFAULT_MODEL.startswith("ollama/") and not self.is_ollama_reachable():
+                # Ollama is not running; fall through to available cloud keys
+                pass
+            else:
+                return settings.DEFAULT_MODEL
 
-        # Priority 1: OpenRouter (universal access to DeepSeek, Claude, Llama, Qwen, etc.)
+        # Priority 1: Groq (ultra-fast inference)
+        if os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY:
+            return "groq/qwen/qwen3.8-27b"
+
+        # Priority 2: OpenRouter (universal access to DeepSeek, Claude, Llama, Qwen, etc.)
         if os.environ.get("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY:
             return "openrouter/deepseek/deepseek-chat"
 
-        # Priority 2: DeepSeek Direct
+        # Priority 3: DeepSeek Direct
         if os.environ.get("DEEPSEEK_API_KEY") or settings.DEEPSEEK_API_KEY:
             return "deepseek/deepseek-chat"
-
-        # Priority 3: Groq (ultra-fast inference)
-        if os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY:
-            return "groq/llama-3.3-70b-versatile"
 
         # Priority 4: OpenAI
         if os.environ.get("OPENAI_API_KEY") or settings.OPENAI_API_KEY:
@@ -81,7 +97,10 @@ class LLMRouter:
         if os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY:
             return "gemini/gemini-2.5-flash"
 
-        # Default fallback
+        # Fallback to local Ollama if running, otherwise default to Gemini
+        if self.is_ollama_reachable():
+            return "ollama/deepseek-r1"
+
         return "gemini/gemini-2.5-flash"
 
     def get_model_for_role(self, role: str) -> str:
@@ -108,18 +127,21 @@ class LLMRouter:
         """
         model_lower = model.lower()
 
-        # Local Ollama or custom local base require no external keys
-        if model_lower.startswith("ollama/") or settings.OPENAI_API_BASE:
+        # Local Ollama check
+        if model_lower.startswith("ollama/"):
+            if not self.is_ollama_reachable():
+                return (
+                    f"Could not connect to local Ollama at {settings.OLLAMA_API_BASE}.\n"
+                    "Make sure Ollama is installed and running (`ollama run deepseek-r1`), "
+                    "or configure a cloud provider like Groq, OpenRouter, or Gemini (`xavier auth`)."
+                )
             return None
 
-        if model_lower.startswith("openrouter/") and not (os.environ.get("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY):
-            return "Missing OPENROUTER_API_KEY. Please set OPENROUTER_API_KEY in your .env file."
-
-        if model_lower.startswith("deepseek/") and not (os.environ.get("DEEPSEEK_API_KEY") or settings.DEEPSEEK_API_KEY):
-            return "Missing DEEPSEEK_API_KEY. Please set DEEPSEEK_API_KEY in your .env file."
+        if settings.OPENAI_API_BASE and (model_lower.startswith("openai/") or "/" not in model_lower):
+            return None
 
         if model_lower.startswith("groq/") and not (os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY):
-            return "Missing GROQ_API_KEY. Please set GROQ_API_KEY in your .env file."
+            return "Missing GROQ_API_KEY. Please set GROQ_API_KEY in your .env file or run `xavier auth`."
 
         if (model_lower.startswith("gpt-") or model_lower.startswith("openai/")) and not (os.environ.get("OPENAI_API_KEY") or settings.OPENAI_API_KEY):
             return "Missing OPENAI_API_KEY. Please set OPENAI_API_KEY in your .env file."

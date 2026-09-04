@@ -25,7 +25,7 @@
 
 </div>
 
-## 🌌 Overview: Turning One Person into an AI Research Lab
+## Overview
 
 Traditional computational science requires months of manual labor: reviewing literature, mathematically formulating a hypothesis, writing simulation code from scratch, debugging runtimes, plotting charts, and typesetting LaTeX papers.
 
@@ -35,7 +35,8 @@ Unlike general-purpose LLMs that hallucinate scientific claims, **XavierLabs wri
 
 ---
 
-## 🏛️ System Architecture: The Agentic Swarm
+## System Architecture
+
 
 ```
                          ┌──────────────────────────────┐
@@ -93,7 +94,7 @@ Unlike general-purpose LLMs that hallucinate scientific claims, **XavierLabs wri
 
 ---
 
-## ⚡ Key Capabilities
+## Key Capabilities
 
 ### 1. Dual Sandbox Execution & Self-Healing Auto-Debugger
 - **Isolated Containment**: Simulations run in an ephemeral Docker container or an isolated local subprocess sandbox with wall-clock timeouts and memory limits.
@@ -117,7 +118,7 @@ Every research run, hypothesis configuration, simulation code iteration, and com
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### Installation
 
@@ -154,7 +155,7 @@ DEEPSEEK_API_KEY=sk-...
 
 ---
 
-## 💻 CLI Usage
+## CLI Usage
 
 ### Interactive Chatbot Mode
 Launch XavierLabs in an interactive, Antigravity CLI-style conversational session:
@@ -227,7 +228,7 @@ xavier config
 
 ---
 
-## 📂 Output Artifacts Structure
+## Output Artifacts
 
 For every experiment, XavierLabs creates a dedicated, reproducible directory:
 
@@ -247,7 +248,7 @@ experiments/nanotechnology_20260904_0810/
 
 ---
 
-## 🔬 Benchmark & Telemetry
+## Performance & Telemetry
 
 | Metric | Groq (`compound-mini`) | DeepSeek (`deepseek-chat`) | Ollama (`deepseek-r1:8b`) |
 | :--- | :--- | :--- | :--- |
@@ -260,7 +261,7 @@ experiments/nanotechnology_20260904_0810/
 
 ---
 
-## 📚 Citation
+## Citation
 
 If you use XavierLabs AI in your research or academic coursework, please cite:
 
@@ -276,7 +277,7 @@ If you use XavierLabs AI in your research or academic coursework, please cite:
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
 Created by [Adrian Xavier Moral (@venstqs)](https://github.com/venstqs).

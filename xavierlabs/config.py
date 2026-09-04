@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +24,25 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
     TAVILY_API_KEY: Optional[str] = None
+
+    @field_validator(
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "GROQ_API_KEY",
+        "TAVILY_API_KEY",
+        "OPENAI_API_BASE",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def clean_key_string(cls, v: Any) -> Optional[str]:
+        if isinstance(v, str):
+            cleaned = v.strip("'\" \t\r\n")
+            return cleaned if cleaned else None
+        return v
 
     # Custom / Local OpenAI-compatible API base (e.g. LM Studio, vLLM, OpenCode, LocalAI)
     OPENAI_API_BASE: Optional[str] = None

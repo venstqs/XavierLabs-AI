@@ -33,8 +33,17 @@ class LLMRouter:
             "OPENAI_API_BASE": settings.OPENAI_API_BASE,
         }
         for env_var, setting_val in key_mappings.items():
-            if setting_val and not os.environ.get(env_var):
-                os.environ[env_var] = setting_val
+            if setting_val:
+                clean_val = setting_val.strip("'\" \t\r\n")
+                os.environ[env_var] = clean_val
+            elif os.environ.get(env_var):
+                os.environ[env_var] = os.environ[env_var].strip("'\" \t\r\n")
+
+        # Google Gemini SDK checks both GEMINI_API_KEY and GOOGLE_API_KEY
+        if os.environ.get("GEMINI_API_KEY") and not os.environ.get("GOOGLE_API_KEY"):
+            os.environ["GOOGLE_API_KEY"] = os.environ["GEMINI_API_KEY"]
+        elif os.environ.get("GOOGLE_API_KEY") and not os.environ.get("GEMINI_API_KEY"):
+            os.environ["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
 
     def resolve_auto_model(self) -> str:
         """

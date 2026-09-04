@@ -22,6 +22,7 @@ HELP_COMMANDS = [
     ("/paper [folder]", "Inspect or open compiled research paper artifacts"),
     ("/history", "Browse and inspect past experiment records"),
     ("/model [name]", "Switch active LLM model or provider on the fly"),
+    ("/auth or /setup", "Configure & live-verify your AI provider API keys"),
     ("/config", "View active compute telemetry and detected API keys"),
     ("/clear", "Clear the terminal screen"),
     ("/help", "Show this list of commands"),
@@ -110,6 +111,9 @@ class ChatSession:
                 self.cmd_history()
             elif cmd == "model":
                 self.cmd_model(arg)
+            elif cmd in ["auth", "setup"]:
+                from xavierlabs.cli import setup_auth
+                setup_auth()
             elif cmd == "config":
                 self.cmd_config()
             else:

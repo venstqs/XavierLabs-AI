@@ -238,5 +238,118 @@ def build_paper(
         webbrowser.open(target_to_open.as_uri())
 
 
+def _save_env_var(key: str, val: str):
+    """Safely saves or updates an environment variable in both global and local .env files."""
+    paths = [
+        Path.home() / ".xavierlabs" / ".env",
+        Path(".env"),
+    ]
+    for p in paths:
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            lines = []
+            found = False
+            if p.exists():
+                with open(p, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        if line.strip().startswith(f"{key}=") or line.strip().startswith(f"export {key}="):
+                            lines.append(f"{key}={val}\n")
+                            found = True
+                        else:
+                            lines.append(line)
+            if not found:
+                lines.append(f"{key}={val}\n")
+            with open(p, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+        except Exception:
+            pass
+
+
+@app.command(name="auth")
+@app.command(name="setup")
+def setup_auth():
+    """
+    Interactive setup wizard to configure and verify your AI provider keys.
+    Saves keys cleanly without quote or encoding issues to ~/.xavierlabs/.env and .env.
+    """
+    from rich.prompt import Prompt
+
+    ui.print_banner()
+    ui.console.print(Panel(
+        "[bold #9ec97b]XavierLabs AI Provider Setup Wizard[/bold #9ec97b]\n\n"
+        "Configure your API keys effortlessly without messing with .env files or quote formatting.\n"
+        "Your keys will be safely stored in [dim]~/.xavierlabs/.env[/dim] so they work across all projects!",
+        border_style="#9ec97b"
+    ))
+
+    ui.console.print("\n[bold cyan]Select an AI provider to configure:[/bold cyan]")
+    ui.console.print("  [1] [bold]Google Gemini[/bold]  (Free tier, fast 1M context - https://aistudio.google.com/app/apikey)")
+    ui.console.print("  [2] [bold]OpenRouter[/bold]     (DeepSeek R1, Claude 3.5, Llama 3 - https://openrouter.ai/keys)")
+    ui.console.print("  [3] [bold]DeepSeek[/bold]       (Direct DeepSeek API - https://platform.deepseek.com/api_keys)")
+    ui.console.print("  [4] [bold]Groq[/bold]           (Ultra-fast Llama 3.3 - https://console.groq.com/keys)")
+    ui.console.print("  [5] [bold]OpenAI[/bold]         (GPT-4o, GPT-4o-mini - https://platform.openai.com/api-keys)")
+    ui.console.print("  [6] [bold]Anthropic[/bold]      (Claude 3.5 Sonnet/Haiku - https://console.anthropic.com/settings/keys)")
+    ui.console.print("  [7] [bold]Local Ollama[/bold]   (100% Free & Offline, NO API keys needed!)")
+
+    choice = Prompt.ask("\nEnter choice [1-7] (or press Enter to cancel)").strip()
+    if not choice:
+        return
+
+    provider_map = {
+        "1": ("GEMINI_API_KEY", "Google Gemini", "gemini/gemini-2.5-flash", "https://aistudio.google.com/app/apikey"),
+        "2": ("OPENROUTER_API_KEY", "OpenRouter", "openrouter/deepseek/deepseek-chat", "https://openrouter.ai/keys"),
+        "3": ("DEEPSEEK_API_KEY", "DeepSeek", "deepseek/deepseek-chat", "https://platform.deepseek.com/api_keys"),
+        "4": ("GROQ_API_KEY", "Groq", "groq/llama-3.3-70b-versatile", "https://console.groq.com/keys"),
+        "5": ("OPENAI_API_KEY", "OpenAI", "gpt-4o-mini", "https://platform.openai.com/api-keys"),
+        "6": ("ANTHROPIC_API_KEY", "Anthropic", "claude-3-5-haiku-20241022", "https://console.anthropic.com/settings/keys"),
+    }
+
+    if choice == "7":
+        ui.console.print("\n[bold green]Configuring Local Ollama:[/bold green]")
+        ui.console.print("Make sure Ollama is installed and running (https://ollama.com).")
+        ui.console.print("Run in a separate terminal: [bold]ollama run deepseek-r1[/bold]")
+        _save_env_var("DEFAULT_MODEL", "ollama/deepseek-r1")
+        _save_env_var("OLLAMA_API_BASE", "http://localhost:11434")
+        ui.console.print("[bold green]✔ Configured default model to 'ollama/deepseek-r1'![/bold green]\n")
+        return
+
+    if choice not in provider_map:
+        ui.console.print("[red]Invalid choice.[/red]")
+        return
+
+    env_var, name, test_model, url = provider_map[choice]
+    ui.console.print(f"\n[bold]Get your {name} key at:[/] [dim]{url}[/dim]")
+    key_input = Prompt.ask(f"Paste your {env_var}").strip()
+
+    if not key_input:
+        ui.console.print("[yellow]Setup cancelled. No key entered.[/yellow]")
+        return
+
+    # Clean key string
+    clean_key = key_input.strip("'\" \t\r\n")
+
+    # Save to global and local .env
+    _save_env_var(env_var, clean_key)
+    os.environ[env_var] = clean_key
+    if env_var == "GEMINI_API_KEY":
+        os.environ["GOOGLE_API_KEY"] = clean_key
+
+    # Live verification ping
+    ui.console.print(f"\n[dim]Verifying {name} key with a live test completion ({test_model})...[/dim]")
+    try:
+        from litellm import completion
+        res = completion(
+            model=test_model,
+            messages=[{"role": "user", "content": "Respond with the single word 'VALID'."}],
+            max_tokens=10,
+        )
+        reply = res.choices[0].message.content.strip()
+        ui.console.print(f"[bold green]✔ SUCCESS! Your {name} key is verified and working![/bold green]")
+        ui.console.print(f"[dim]Provider response: '{reply}'[/dim]\n")
+    except Exception as e:
+        ui.console.print(f"[bold red]❌ Key verification failed:[/bold red] {e}\n")
+        ui.console.print("[yellow]Double-check that you copied the complete key without missing characters.[/yellow]\n")
+
+
 if __name__ == "__main__":
     app()

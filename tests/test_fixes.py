@@ -1,4 +1,5 @@
 import json
+import pytest
 import os
 from pathlib import Path
 
@@ -101,3 +102,61 @@ def test_html_paper_escapes_llm_content():
     assert "x &lt; y &amp; y &gt; z" in html_out
     assert "loss&lt;min&gt;" in html_out
     assert "A &lt;b&gt;bold&lt;/b&gt; claim" in html_out
+
+
+def test_html_paper_renders_markdown_report_and_keeps_math():
+    report = (
+        "# Duplicate Title\n\n## Executive Summary\n\nWe find **strong** effects where "
+        "$a_i * b_j$ holds.\n\n| k | v |\n|---|---|\n| loss | 0.1 |\n\n<script>bad()</script>\n"
+    )
+    out = SynthesizerAgent().generate_html_paper(
+        hypothesis=_hypothesis(), metrics={"loss": 0.1}, literature=[], markdown_body=report,
+    )
+    assert "<h2>Executive Summary</h2>" in out
+    assert "<strong>strong</strong>" in out
+    assert "$a_i * b_j$" in out          # math untouched by markdown emphasis
+    assert "<table>" in out
+    assert "<script>bad()</script>" not in out
+    assert "Duplicate Title" not in out  # leading H1 dropped; header shows the title
+
+
+# ---------------------------------------------------------------- config / review
+
+def test_legacy_timeout_env_alias(monkeypatch):
+    from xavierlabs.config import Settings
+    monkeypatch.delenv("EXECUTION_TIMEOUT", raising=False)
+    monkeypatch.setenv("EXPERIMENT_TIMEOUT_SECONDS", "42")
+    assert Settings(_env_file=None).EXECUTION_TIMEOUT == 42
+
+
+def _review_json(overall, feasibility, approved):
+    return {"novelty_score": 8, "rigor_score": 8, "feasibility_score": feasibility, "overall_score": overall,
+            "approved": approved, "strengths": [], "weaknesses": ["vague"], "modifications_required": "be specific"}
+
+
+def test_reviewer_enforces_threshold_over_llm_flag(monkeypatch):
+    from xavierlabs.agents.reviewer import ReviewerAgent
+    agent = ReviewerAgent()
+    monkeypatch.setattr(agent.router, "generate_json", lambda **kw: _review_json(5.0, 9.0, True))
+    assert agent.review_hypothesis(_hypothesis()).approved is False
+    monkeypatch.setattr(agent.router, "generate_json", lambda **kw: _review_json(8.0, 7.0, False))
+    assert agent.review_hypothesis(_hypothesis()).approved is True
+
+
+def test_rejected_hypothesis_stops_before_coding(monkeypatch):
+    from xavierlabs.loop.orchestrator import ResearchOrchestrator
+    from xavierlabs.config import settings
+
+    orch = ResearchOrchestrator()
+    monkeypatch.setattr(settings, "MAX_REFINEMENT_ROUNDS", 2)
+    monkeypatch.setattr(orch.ideator, "discover_literature", lambda topic, max_papers=6: [])
+    ideas = []
+    monkeypatch.setattr(orch.ideator, "formulate_hypothesis", lambda **kw: ideas.append(kw) or _hypothesis())
+    monkeypatch.setattr(orch.reviewer.router, "generate_json", lambda **kw: _review_json(4.0, 4.0, False))
+    monkeypatch.setattr(orch.coder, "generate_experiment_code", lambda *a, **k: pytest.fail("coder must not run"))
+
+    out = orch.run_research("a vague topic")
+
+    assert out["status"] == "rejected"
+    assert len(ideas) == 3  # initial + 2 refinement rounds
+    assert "vague" in ideas[-1]["critique_feedback"]

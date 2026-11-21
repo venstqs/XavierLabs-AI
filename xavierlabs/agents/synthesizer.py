@@ -4,6 +4,7 @@ import re
 import json
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from xavierlabs.agents.base import BaseAgent
@@ -16,6 +17,61 @@ Your mission is to translate experimental telemetry, numerical metrics, and acad
 1. High-aesthetic data visualization scripts (`plot.py`) using matplotlib/seaborn.
 2. An academic LaTeX manuscript (`paper.tex`) ready for arXiv submission.
 3. A comprehensive, beautifully formatted Markdown report (`report.md`).
+"""
+
+
+LOGO_SVG = (
+    '<svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="currentColor"/>'
+    '<g transform="translate(7 7) scale(.65)"><defs><mask id="xl-m"><rect width="40" height="40" fill="#fff"/>'
+    '<polygon points="2.4,36 11.6,36 31.41,4 22.21,4" fill="#000"/></mask></defs>'
+    '<g transform="translate(6.33 0) skewX(-10)" class="mark-ink">'
+    '<polygon points="30.0,36 36.0,36 16.19,4 10.19,4" mask="url(#xl-m)"/>'
+    '<polygon points="4.0,36 10.0,36 29.81,4 23.81,4"/>'
+    '<rect x="12.076" y="25.8" width="15.848" height="4.0"/></g></g></svg>'
+)
+
+PAPER_CSS = """
+:root { --bg:#fff; --soft:#f5f5f5; --line:#e7e7e7; --line-2:#d4d4d4; --ink:#0a0a0a; --ink-2:#262626;
+        --muted:#616161; --dim:#9a9a9a; --live:#16a34a; color-scheme: light; }
+@media screen and (prefers-color-scheme: dark) {
+  :root { --bg:#0a0a0a; --soft:#161616; --line:#232323; --line-2:#333; --ink:#f5f5f5; --ink-2:#d9d9d9;
+          --muted:#a3a3a3; --dim:#6b6b6b; --live:#4ade80; color-scheme: dark; }
+}
+@page { size: A4; margin: 18mm 16mm; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+       font-size: 15.5px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.paper { max-width: 760px; margin: 0 auto; padding: 40px clamp(16px, 5vw, 40px) 64px; }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+            padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 48px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.025em; }
+.mark { width: 26px; height: 26px; color: var(--ink); }
+.mark-ink { fill: var(--bg); }
+.meta { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: .86rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live);
+       box-shadow: 0 0 0 4px color-mix(in srgb, var(--live) 18%, transparent); }
+.kicker { color: var(--muted); font-size: .9rem; font-weight: 500; margin: 0 0 10px; }
+h1 { font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.05; letter-spacing: -.05em; font-weight: 600; margin: 0; text-wrap: balance; }
+.byline { color: var(--muted); margin: 16px 0 40px; font-size: .95rem; }
+.body h2 { font-size: 1.35rem; letter-spacing: -.03em; font-weight: 600; margin: 44px 0 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+.body h3 { font-size: 1.08rem; letter-spacing: -.02em; font-weight: 600; margin: 28px 0 8px; }
+.body p, .body li { color: var(--ink-2); }
+.body a { color: var(--ink); text-underline-offset: 3px; }
+.body blockquote { margin: 20px 0; padding: 4px 18px; border-left: 2px solid var(--ink); color: var(--muted); }
+code { font-family: "Geist Mono", ui-monospace, monospace; font-size: .86em; background: var(--soft);
+       border: 1px solid var(--line); border-radius: 6px; padding: .1em .4em; }
+pre { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: .92rem; display: block; overflow-x: auto; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; border-bottom-color: var(--line-2); }
+table.metrics td:last-child { font-family: "Geist Mono", ui-monospace, monospace; word-break: break-word; }
+img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+figure { margin: 28px 0; text-align: center; }
+figcaption { color: var(--muted); font-size: .86rem; margin-top: 10px; }
+.refs li { margin-bottom: 8px; font-size: .92rem; word-break: break-word; }
+.foot { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--dim); font-size: .82rem; }
+@media print { .paper { max-width: none; padding: 0; } .body h2 { break-after: avoid; } figure, table { break-inside: avoid; } }
 """
 
 
@@ -152,6 +208,25 @@ Requirements:
         fenced = re.fullmatch(r"```(?:markdown|md)?[ \t]*\n([\s\S]*?)\n?```", text)
         return fenced.group(1).strip() if fenced else text
 
+    @staticmethod
+    def _render_markdown(markdown_text: str) -> str:
+        """
+        Renders Markdown to HTML with raw HTML disabled (so LLM output cannot inject markup).
+        TeX math ($...$ and $$...$$) is shielded from Markdown so MathJax can typeset it.
+        """
+        from markdown_it import MarkdownIt
+
+        math_spans: List[str] = []
+
+        def stash(match: "re.Match[str]") -> str:
+            math_spans.append(match.group(0))
+            return f"XLMATH{len(math_spans) - 1}XL"
+
+        shielded = re.sub(r"\$\$[\s\S]+?\$\$|(?<![\\$])\$(?!\s)[^$\n]+?(?<!\s)\$", stash, markdown_text)
+        md = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table").enable("strikethrough")
+        rendered = md.render(shielded)
+        return re.sub(r"XLMATH(\d+)XL", lambda m: html.escape(math_spans[int(m.group(1))]), rendered)
+
     def generate_html_paper(
         self,
         hypothesis: HypothesisConfig,
@@ -159,160 +234,92 @@ Requirements:
         literature: List[AcademicPaper],
         markdown_body: str,
     ) -> str:
-        """Generates a publication-grade standalone HTML paper with MathJax and academic CSS."""
+        """
+        Builds a standalone HTML paper from the Markdown report (MathJax enabled),
+        styled to the XavierLabs brand, plus a metrics appendix.
+        """
         esc = html.escape
-        lit_items = "".join(
-            f"<li><strong>{esc(p.title)}</strong> ({p.year or 'N/A'}) - <em>{esc(', '.join(p.authors[:3]))}</em>. "
-            f"<a href=\"{esc(p.url, quote=True)}\" target=\"_blank\" rel=\"noopener\">[Link]</a></li>"
-            for p in literature
-        )
+        body_md = (markdown_body or "").strip()
+        # The page header already shows the title; drop a leading "# Title" line from the report.
+        body_md = re.sub(r"\A#\s+[^\n]*\n+", "", body_md)
+        if body_md:
+            body_html = self._render_markdown(body_md)
+        else:
+            body_html = (
+                f"<h2>Motivation</h2><p>{esc(hypothesis.motivation)}</p>"
+                f"<h2>Theoretical Basis</h2><p>{esc(hypothesis.theoretical_basis)}</p>"
+                f"<h2>Experimental Design</h2><p>{esc(hypothesis.experimental_design)}</p>"
+            )
+
+        figure_html = ""
+        if "plot.png" not in body_md:
+            figure_html = (
+                '<figure><img src="plot.png" alt="Experiment figure" onerror="this.parentElement.remove()">'
+                "<figcaption>Figure 1. Visualization generated from the recorded metrics.</figcaption></figure>"
+            )
 
         def fmt_value(v: Any) -> str:
             text = json.dumps(v, default=str) if isinstance(v, (dict, list)) else str(v)
             return esc(text if len(text) <= 300 else text[:300] + "...")
 
         metrics_rows = "".join(
-            f"<tr><td><code>{esc(str(k))}</code></td><td><strong>{fmt_value(v)}</strong></td></tr>"
+            f"<tr><td><code>{esc(str(k))}</code></td><td>{fmt_value(v)}</td></tr>"
             for k, v in metrics.items()
         )
-        title = esc(hypothesis.title)
-        motivation = esc(hypothesis.motivation)
-        theory = esc(hypothesis.theoretical_basis)
-        design = esc(hypothesis.experimental_design)
 
-        html_doc = f"""<!DOCTYPE html>
+        refs_html = ""
+        has_refs_section = re.search(r"^#{1,3}\s*(references|bibliography)", body_md, re.IGNORECASE | re.MULTILINE)
+        if literature and not has_refs_section:
+            items = "".join(
+                f"<li>{esc(', '.join(p.authors[:3]))}{' et al.' if len(p.authors) > 3 else ''}. "
+                f"<em>{esc(p.title)}</em> ({p.year or 'n.d.'}). "
+                f"<a href=\"{esc(p.url, quote=True)}\" target=\"_blank\" rel=\"noopener\">{esc(p.url)}</a></li>"
+                for p in literature
+            )
+            refs_html = f'<h2>References</h2><ol class="refs">{items}</ol>'
+
+        title = esc(hypothesis.title)
+        today = datetime.now().strftime("%B %d, %Y")
+
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>window.MathJax = {{ tex: {{ inlineMath: [['$', '$']] }} }};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" async></script>
 <style>
-    @page {{ size: A4; margin: 20mm; }}
-    body {{
-        font-family: 'Times New Roman', Times, serif;
-        line-height: 1.5;
-        color: #111;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        background: #fff;
-    }}
-    h1.title {{
-        text-align: center;
-        font-size: 24pt;
-        margin-bottom: 8px;
-        font-weight: bold;
-    }}
-    .authors {{
-        text-align: center;
-        font-style: italic;
-        font-size: 11pt;
-        margin-bottom: 24px;
-        color: #333;
-    }}
-    .abstract-box {{
-        background: #f9f9f9;
-        border-left: 4px solid #282c34;
-        padding: 16px 20px;
-        margin: 20px 0 30px 0;
-        font-size: 10.5pt;
-    }}
-    .abstract-title {{
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 9pt;
-        margin-bottom: 6px;
-    }}
-    h2 {{
-        font-size: 14pt;
-        border-bottom: 1.5px solid #222;
-        padding-bottom: 4px;
-        margin-top: 28px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }}
-    h3 {{ font-size: 12pt; margin-top: 18px; }}
-    p {{ text-align: justify; font-size: 11pt; margin-bottom: 12px; }}
-    table {{
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-        font-size: 10.5pt;
-    }}
-    th, td {{
-        border: 1px solid #ccc;
-        padding: 8px 12px;
-        text-align: left;
-    }}
-    th {{ background: #f0f0f0; }}
-    .figure-container {{
-        text-align: center;
-        margin: 24px 0;
-    }}
-    .figure-container img {{
-        max-width: 100%;
-        height: auto;
-        border: 1px solid #eee;
-        border-radius: 4px;
-    }}
-    .caption {{
-        font-size: 9.5pt;
-        color: #555;
-        margin-top: 8px;
-        font-style: italic;
-    }}
-    ol.references {{
-        font-size: 10pt;
-        padding-left: 20px;
-    }}
-    ol.references li {{ margin-bottom: 6px; }}
+{PAPER_CSS}
 </style>
 </head>
 <body>
+<main class="paper">
+  <header class="masthead">
+    <div class="brand">{LOGO_SVG}<span>XavierLabs</span></div>
+    <div class="meta"><span class="dot"></span>Autonomous research report · {today}</div>
+  </header>
 
-<h1 class="title">{title}</h1>
-<div class="authors">
-    <strong>XavierLabs AI Computational Research Swarm</strong><br>
-    Autonomous Terminal-Native Scientific Research Engine
-</div>
+  <p class="kicker">Computational Research Paper</p>
+  <h1>{title}</h1>
+  <p class="byline">XavierLabs AI Research Swarm · Ideator · Reviewer · Coder · Synthesizer</p>
 
-<div class="abstract-box">
-    <div class="abstract-title">Abstract</div>
-    <p>{motivation} In this paper, we computationally investigate this hypothesis through empirical simulations and rigorous telemetry analysis. Our results quantify convergence dynamics and parameter sensitivity across standardized benchmarks.</p>
-</div>
+  <article class="body">
+    {body_html}
+    {figure_html}
+    <h2>Appendix A. Recorded Metrics</h2>
+    <table class="metrics"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>{metrics_rows}</tbody></table>
+    {refs_html}
+  </article>
 
-<h2>1. Introduction & Theoretical Motivation</h2>
-<p>{motivation}</p>
-<p><strong>Theoretical Formulation:</strong> {theory}</p>
-
-<h2>2. Experimental Methodology</h2>
-<p>{design}</p>
-
-<h2>3. Quantitative Findings & Metrics</h2>
-<table>
-    <thead>
-        <tr><th>Metric Name</th><th>Recorded Value</th></tr>
-    </thead>
-    <tbody>
-        {metrics_rows}
-    </tbody>
-</table>
-
-<div class="figure-container">
-    <img src="plot.png" alt="Experimental Visualization" onerror="this.style.display='none'">
-    <div class="caption">Figure 1: Telemetry and trajectory visualization generated from empirical metrics.</div>
-</div>
-
-<h2>4. Literature & Citations</h2>
-<ol class="references">
-    {lit_items}
-</ol>
-
+  <footer class="foot">Generated by XavierLabs AI from code executed in a sandbox. Verify results before citing.</footer>
+</main>
 </body>
 </html>
 """
-        return html_doc
 
     @staticmethod
     def _find_headless_browser() -> Optional[str]:

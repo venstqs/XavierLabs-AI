@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import subprocess
@@ -6,6 +7,27 @@ from typing import Optional
 
 from xavierlabs.sandbox.base import SandboxBase, ExecutionResult, scrubbed_env
 from xavierlabs.config import settings
+
+
+LOCAL_MEM_LIMIT_BYTES = 2 * 1024 ** 3      # 2 GiB address space
+LOCAL_MAX_FILE_BYTES = 512 * 1024 ** 2     # 512 MiB per written file
+
+
+def _posix_limits(cpu_seconds: int):
+    """Returns a preexec_fn applying resource limits (Linux/macOS only)."""
+    def apply():
+        import resource
+        for limit, value in (
+            (resource.RLIMIT_CPU, cpu_seconds),
+            (resource.RLIMIT_FSIZE, LOCAL_MAX_FILE_BYTES),
+            (resource.RLIMIT_AS, LOCAL_MEM_LIMIT_BYTES),
+        ):
+            try:
+                resource.setrlimit(limit, (value, value))
+            except (ValueError, OSError):
+                pass  # e.g. RLIMIT_AS is not enforceable on macOS
+        os.setsid()  # own process group, so nothing outlives the timeout
+    return apply
 
 
 class LocalSandbox(SandboxBase):
@@ -47,6 +69,18 @@ class LocalSandbox(SandboxBase):
         env["PYTHONPATH"] = str(workspace_dir)
         # Headless plotting backend so matplotlib never tries to open a window
         env["MPLBACKEND"] = "Agg"
+        # Private home/temp dirs so caches and stray writes stay inside the workspace
+        private = workspace_dir / ".sandbox"
+        (private / "tmp").mkdir(parents=True, exist_ok=True)
+        for var in ("HOME", "USERPROFILE"):
+            env[var] = str(private)
+        for var in ("TMP", "TEMP", "TMPDIR"):
+            env[var] = str(private / "tmp")
+        env["MPLCONFIGDIR"] = str(private / "mpl")
+
+        extra = {}
+        if os.name == "posix":
+            extra["preexec_fn"] = _posix_limits(cpu_seconds=timeout + 5)
 
         start_time = time.time()
         try:
@@ -59,6 +93,7 @@ class LocalSandbox(SandboxBase):
                 encoding="utf-8",
                 errors="replace",
                 timeout=timeout,
+                **extra,
             )
             execution_time = time.time() - start_time
             stdout = process.stdout

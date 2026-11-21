@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional, List
+from rich import box
 from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
@@ -32,7 +33,7 @@ HELP_COMMANDS = [
 
 class ChatSession:
     """
-    Antigravity CLI-style Interactive Chatbot & Scientific Research REPL.
+    Interactive Chatbot & Scientific Research REPL.
     Allows continuous interaction, conversational hypothesis brainstorming,
     and single-click autonomous experiment execution.
     """
@@ -50,7 +51,7 @@ class ChatSession:
 
         while self.running:
             try:
-                prompt_label = "[bold #9ec97b]xavier[/bold #9ec97b]"
+                prompt_label = "[bold]xavier[/bold]"
                 if self.active_topic:
                     prompt_label += f" [dim](research:{self.active_topic[:16]}...)[/dim]"
                 prompt_label += " [dim]›[/dim]"
@@ -71,21 +72,21 @@ class ChatSession:
         sandbox, sandbox_desc = get_sandbox()
         current_model = router.resolve_auto_model()
 
-        status_table = Table.grid(padding=(0, 2))
-        status_table.add_column(style="dim")
-        status_table.add_column(style="bold white")
+        status_table = Table.grid(padding=(0, 3))
+        status_table.add_column(style="grey58", no_wrap=True)
+        status_table.add_column()
 
-        status_table.add_row("Active Model:", f"[cyan]{current_model}[/cyan]")
-        status_table.add_row("Execution Sandbox:", f"[green]{sandbox_desc}[/green]")
-        status_table.add_row("Workspace Dir:", f"[dim]{settings.WORKSPACE_DIR.resolve()}[/dim]")
+        status_table.add_row("model", f"[bold]{current_model}[/bold]")
+        status_table.add_row("sandbox", sandbox_desc)
+        status_table.add_row("workspace", f"[grey58]{settings.WORKSPACE_DIR.resolve()}[/grey58]")
 
         ui.console.print(Panel(
             status_table,
-            title="[bold #9ec97b]XavierLabs AI Interactive Console[/bold #9ec97b]",
-            subtitle="[dim]Type any topic to research, chat naturally, or type /help for commands[/dim]",
-            border_style="#9ec97b",
+            box=box.ROUNDED,
+            border_style="grey27",
+            padding=(0, 2),
         ))
-        ui.console.print()
+        ui.console.print("[grey58]Describe a topic to brainstorm, [bold]/research <topic>[/bold] to run the swarm, or [bold]/help[/bold].[/grey58]\n")
 
     def handle_input(self, text: str):
         # 1. Slash commands
@@ -168,17 +169,19 @@ class ChatSession:
 
     def run_research_workflow(self, topic: str):
         """Executes the end-to-end scientific research loop."""
-        ui.console.print(f"\n[bold #9ec97b]▶ Launching Autonomous Research Swarm for:[/] [white]{topic}[/]\n")
+        ui.console.print(f"\n[bold]▶ Launching Autonomous Research Swarm for:[/] [white]{topic}[/]\n")
         self.active_topic = topic
         try:
             outcome = self.orchestrator.run_research(topic=topic)
             exp_dir = outcome["workspace"]
 
+            if outcome.get("status") == "rejected":
+                return
             if outcome.get("status") != "completed":
-                ui.console.print(f"\n[bold yellow]Research run did not complete.[/bold yellow] Partial files are in [cyan]{exp_dir}[/cyan]\n")
+                ui.console.print(f"\n[bold yellow]Research run did not complete.[/bold yellow] Partial files are in [bold]{exp_dir}[/bold]\n")
                 return
 
-            ui.console.print(f"\n[bold green]✔ Research run complete![/bold green] Artifacts saved in [cyan]{exp_dir}[/cyan]\n")
+            ui.console.print(f"\n[bold green]✔ Research run complete![/bold green] Artifacts saved in [bold]{exp_dir}[/bold]\n")
 
             # Offer to view paper
             if Confirm.ask("Open compiled research paper in viewer now?", default=True):
@@ -195,9 +198,9 @@ class ChatSession:
             self.active_topic = None
 
     def cmd_help(self):
-        table = Table(title="[bold #9ec97b]XavierLabs AI Interactive Commands[/bold #9ec97b]", show_header=True)
-        table.add_column("Command", style="cyan", width=24)
-        table.add_column("Description", style="white")
+        table = Table(title="[bold]XavierLabs AI Interactive Commands[/bold]", show_header=True)
+        table.add_column("Command", style="bold", width=24)
+        table.add_column("Description", style="")
 
         for cmd, desc in HELP_COMMANDS:
             table.add_row(cmd, desc)
@@ -212,7 +215,7 @@ class ChatSession:
 
     def cmd_model(self, model_name: str):
         if not model_name:
-            ui.console.print(f"Current active model: [bold cyan]{router.resolve_auto_model()}[/bold cyan]")
+            ui.console.print(f"Current active model: [bold]{router.resolve_auto_model()}[/bold]")
             ui.console.print("\n[dim]Popular choices:[/dim]")
             ui.console.print("  • openrouter/deepseek/deepseek-r1")
             ui.console.print("  • deepseek/deepseek-chat")
@@ -231,7 +234,7 @@ class ChatSession:
         settings.REVIEWER_MODEL = model_name
         settings.CODER_MODEL = model_name
         settings.SYNTHESIZER_MODEL = model_name
-        ui.console.print(f"[bold green]✔ Model updated to:[/] [cyan]{model_name}[/cyan]\n")
+        ui.console.print(f"[bold green]✔ Model updated to:[/] [bold]{model_name}[/bold]\n")
 
     def cmd_config(self):
         from xavierlabs.cli import show_config
@@ -251,7 +254,7 @@ class ChatSession:
                     ui.console.print("[yellow]No past experiments found.[/yellow]")
                     return
 
-                ui.console.print("\n[bold cyan]Recent Experiments:[/bold cyan]")
+                ui.console.print("\n[bold]Recent Experiments:[/bold]")
                 for idx, exp in enumerate(experiments, 1):
                     ui.console.print(f"  [{idx}] [bold]{exp.topic}[/bold] [dim]({settings.WORKSPACE_DIR / exp.slug})[/dim]")
 
@@ -264,5 +267,5 @@ class ChatSession:
         build_paper(experiment_dir=Path(folder), open_viewer=True)
 
     def cmd_exit(self):
-        ui.console.print("[bold #9ec97b]Exiting XavierLabs AI. Keep exploring![/bold #9ec97b]\n")
+        ui.console.print("[bold]Exiting XavierLabs AI. Keep exploring![/bold]\n")
         self.running = False

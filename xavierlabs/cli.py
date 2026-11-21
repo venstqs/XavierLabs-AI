@@ -37,7 +37,7 @@ def main_callback(ctx: typer.Context):
 @app.command(name="chat")
 def start_chat():
     """
-    Launch the interactive conversational scientific research chatbot (Antigravity CLI-style).
+    Launch the interactive conversational scientific research chatbot.
     """
     from xavierlabs.ui.chat import ChatSession
     session = ChatSession()
@@ -50,6 +50,7 @@ def research(
     codebase: Optional[Path] = typer.Option(None, "--codebase", "-c", help="Path to starting codebase or datasets to ingest"),
     retries: int = typer.Option(settings.MAX_DEBUG_RETRIES, "--retries", "-r", help="Max auto-debugging retries for failing experiments"),
     model: Optional[str] = typer.Option(None, "--model", "-m", help="Override LLM model for all agents (e.g. gemini/gemini-2.5-flash)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Run the experiment even if the Reviewer still rejects the hypothesis"),
 ):
     """
     Launch an autonomous end-to-end scientific research loop.
@@ -67,6 +68,7 @@ def research(
             topic=topic,
             starting_code_dir=codebase,
             max_debug_retries=retries,
+            proceed_if_rejected=force,
         )
     except Exception as e:
         err_msg = str(e)
@@ -74,7 +76,7 @@ def research(
             ui.console.print(Panel(
                 f"[bold red]❌ LLM Provider Authentication Error[/bold red]\n\n"
                 f"{err_msg}\n\n"
-                f"[bold cyan]How to fix:[/bold cyan]\n"
+                f"[bold]How to fix:[/bold]\n"
                 f"  • [bold]OpenRouter[/bold]: echo \"OPENROUTER_API_KEY=sk-or-...\" > .env\n"
                 f"  • [bold]DeepSeek[/bold]:   echo \"DEEPSEEK_API_KEY=sk-...\" > .env\n"
                 f"  • [bold]Ollama[/bold]:     ollama run deepseek-r1 (100% free offline, zero keys needed!)\n"
@@ -91,7 +93,7 @@ def research(
 @app.command(name="run")
 def run_script(
     script_path: Path = typer.Argument(..., help="Path to the Python experiment script to run"),
-    timeout: int = typer.Option(settings.EXPERIMENT_TIMEOUT_SECONDS, "--timeout", "-t", help="Timeout in seconds"),
+    timeout: int = typer.Option(settings.EXECUTION_TIMEOUT, "--timeout", "-t", help="Timeout in seconds"),
 ):
     """
     Execute a standalone experiment script within the isolated XavierLabs sandbox.
@@ -132,10 +134,10 @@ def show_history(
             ui.console.print("[yellow]No research experiments recorded yet in the database.[/yellow]")
             return
 
-        table = Table(title="[bold cyan]XavierLabs AI Research History[/bold cyan]", show_header=True)
+        table = Table(title="[bold]XavierLabs AI Research History[/bold]", show_header=True)
         table.add_column("ID", style="dim", width=6)
         table.add_column("Date", style="dim", width=18)
-        table.add_column("Topic", style="white")
+        table.add_column("Topic", style="")
         table.add_column("Status", style="bold")
         table.add_column("Artifacts", justify="center")
 
@@ -163,12 +165,12 @@ def show_config():
 
     from xavierlabs.llm.router import router
 
-    table = Table(title="[bold cyan]XavierLabs AI Configuration & Compute Telemetry[/bold cyan]", show_header=True)
+    table = Table(title="[bold]XavierLabs AI Configuration & Compute Telemetry[/bold]", show_header=True)
     table.add_column("Component", style="dim", width=25)
-    table.add_column("Configured Value", style="white")
+    table.add_column("Configured Value", style="")
 
     table.add_row("Execution Sandbox", f"[bold green]{sandbox_desc}[/bold green]")
-    table.add_row("Active/Auto Model", f"[bold cyan]{router.resolve_auto_model()}[/bold cyan]")
+    table.add_row("Active/Auto Model", f"[bold]{router.resolve_auto_model()}[/bold]")
     table.add_row("Ideator Model", settings.IDEATOR_MODEL)
     table.add_row("Reviewer Model", settings.REVIEWER_MODEL)
     table.add_row("Coder Model", settings.CODER_MODEL)
@@ -220,10 +222,10 @@ def build_paper(
     tex_file = exp_path / "paper.tex"
     md_file = exp_path / "report.md"
 
-    table = Table(title=f"[bold cyan]Research Paper Artifacts ({exp_path.name})[/bold cyan]", show_header=True)
-    table.add_column("Format", style="cyan", width=15)
+    table = Table(title=f"[bold]Research Paper Artifacts ({exp_path.name})[/bold]", show_header=True)
+    table.add_column("Format", style="bold", width=15)
     table.add_column("Status", style="bold", width=15)
-    table.add_column("File Path", style="white")
+    table.add_column("File Path", style="")
 
     table.add_row("Publication PDF", "[green]Ready[/green]" if pdf_file.exists() else "[yellow]Missing[/yellow]", str(pdf_file.resolve()))
     table.add_row("Academic HTML", "[green]Ready[/green]" if html_file.exists() else "[yellow]Missing[/yellow]", str(html_file.resolve()))
@@ -276,13 +278,13 @@ def setup_auth():
 
     ui.print_banner()
     ui.console.print(Panel(
-        "[bold #9ec97b]XavierLabs AI Provider Setup Wizard[/bold #9ec97b]\n\n"
+        "[bold]XavierLabs AI Provider Setup Wizard[/bold]\n\n"
         "Configure your API keys effortlessly without messing with .env files or quote formatting.\n"
         "Your keys will be safely stored in [dim]~/.xavierlabs/.env[/dim] so they work across all projects!",
-        border_style="#9ec97b"
+        border_style="grey35"
     ))
 
-    ui.console.print("\n[bold cyan]Select an AI provider to configure:[/bold cyan]")
+    ui.console.print("\n[bold]Select an AI provider to configure:[/bold]")
     ui.console.print("  [1] [bold]Google Gemini[/bold]  (Free tier, fast 1M context - https://aistudio.google.com/app/apikey)")
     ui.console.print("  [2] [bold]OpenRouter[/bold]     (DeepSeek R1, Claude 3.5, Llama 3 - https://openrouter.ai/keys)")
     ui.console.print("  [3] [bold]DeepSeek[/bold]       (Direct DeepSeek API - https://platform.deepseek.com/api_keys)")

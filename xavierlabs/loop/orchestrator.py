@@ -47,6 +47,7 @@ class ResearchOrchestrator:
         topic: str,
         starting_code_dir: Optional[Path] = None,
         max_debug_retries: Optional[int] = None,
+        proceed_if_rejected: bool = False,
     ) -> Dict[str, Any]:
         retries = settings.MAX_DEBUG_RETRIES if max_debug_retries is None else max(0, max_debug_retries)
         slug = self._slugify(topic)
@@ -54,18 +55,23 @@ class ResearchOrchestrator:
         workspace.mkdir(parents=True, exist_ok=True)
 
         ui.print_banner()
-        ui.console.print(f"[bold cyan]Initiating Research Run:[/bold cyan] {topic}")
+        ui.console.print(f"[bold]Initiating Research Run:[/bold] {topic}")
         ui.console.print(f"[dim]Workspace Directory: {workspace.resolve()}[/dim]\n")
 
         sandbox, sandbox_desc = get_sandbox()
         ui.console.print(f"[bold green]Execution Sandbox:[/bold green] {sandbox_desc}\n")
         if isinstance(sandbox, DockerSandbox):
             try:
-                with ui.console.status("[cyan]Preparing Docker sandbox image (first run builds it, ~1-2 min)...[/cyan]"):
+                with ui.console.status("Preparing Docker sandbox image (first run builds it, ~1-2 min)..."):
                     sandbox.ensure_image()
             except Exception as e:
                 ui.console.print(f"[yellow]Docker image unavailable ({e}). Falling back to local subprocess sandbox.[/yellow]\n")
                 sandbox = LocalSandbox()
+        if isinstance(sandbox, LocalSandbox):
+            ui.console.print(
+                "[dim yellow]Note: the local sandbox hides API keys and confines temp files, but AI-generated code "
+                "still runs with your user's file access. Start Docker for full isolation.[/dim yellow]\n"
+            )
 
         with Session(engine) as db_session:
             exp = Experiment(slug=slug, topic=topic, status="ideating")
@@ -84,14 +90,14 @@ class ResearchOrchestrator:
             # PHASE 1: Discovery & Hypothesis Formulation (Ideator)
             # -------------------------------------------------------------
             ui.print_agent_header(self.ideator.name, self.ideator.role, "Querying literature & formulating hypothesis...")
-            with ui.console.status("[cyan]Searching ArXiv & Semantic Scholar...[/cyan]"):
+            with ui.console.status("Searching ArXiv & Semantic Scholar..."):
                 literature = self.ideator.discover_literature(topic, max_papers=6)
 
             ui.console.print(f"[green]Retrieved {len(literature)} relevant academic publications.[/green]")
             for p in literature:
                 ui.console.print(f"  • [bold]{p.title}[/bold] ({p.year or 'N/A'}) - [dim]{p.url}[/dim]")
 
-            with ui.console.status("[cyan]Formulating mathematical & empirical hypothesis...[/cyan]"):
+            with ui.console.status("Formulating mathematical & empirical hypothesis..."):
                 hypothesis = self.ideator.formulate_hypothesis(
                     topic=topic,
                     literature=literature,
@@ -104,23 +110,32 @@ class ResearchOrchestrator:
             # PHASE 2: Peer Review & Critique (Reviewer)
             # -------------------------------------------------------------
             ui.print_agent_header(self.reviewer.name, self.reviewer.role, "Conducting rigorous peer review...")
-            with ui.console.status("[yellow]Auditing hypothesis novelty, rigor, and feasibility...[/yellow]"):
+            with ui.console.status("Auditing hypothesis novelty, rigor, and feasibility..."):
                 review = self.reviewer.review_hypothesis(hypothesis)
 
             ui.print_review(review)
 
-            # Refinement loop if rejected
-            if not review.approved:
-                ui.console.print("[yellow]Hypothesis score below threshold. Ideator refining with Reviewer feedback...[/yellow]")
-                with ui.console.status("[cyan]Refining hypothesis...[/cyan]"):
+            # Refinement loop: the Ideator revises until approved or out of rounds
+            max_rounds = max(0, settings.MAX_REFINEMENT_ROUNDS)
+            round_no = 0
+            while not review.approved and round_no < max_rounds:
+                round_no += 1
+                ui.console.print(
+                    f"[yellow]Hypothesis below threshold. Ideator refining with Reviewer feedback "
+                    f"(round {round_no}/{max_rounds})...[/yellow]"
+                )
+                critique = review.modifications_required
+                if review.weaknesses:
+                    critique += "\n\nWeaknesses identified:\n" + "\n".join(f"- {w}" for w in review.weaknesses)
+                with ui.console.status("Refining hypothesis..."):
                     hypothesis = self.ideator.formulate_hypothesis(
                         topic=topic,
                         literature=literature,
                         workspace_context=workspace_context,
-                        critique_feedback=review.modifications_required,
+                        critique_feedback=critique,
                     )
                 ui.print_hypothesis(hypothesis)
-                with ui.console.status("[yellow]Re-evaluating revised hypothesis...[/yellow]"):
+                with ui.console.status("Re-evaluating revised hypothesis..."):
                     review = self.reviewer.review_hypothesis(hypothesis)
                 ui.print_review(review)
 
@@ -137,6 +152,20 @@ class ResearchOrchestrator:
                 review_feedback=review.modifications_required,
             )
             db_session.add(hyp_record)
+
+            if not review.approved and not (proceed_if_rejected or settings.PROCEED_IF_REJECTED):
+                exp.status = "rejected"
+                db_session.commit()
+                ui.console.print(
+                    f"[bold red]Hypothesis still rejected after {max_rounds} refinement round(s) "
+                    f"(score {review.overall_score:.1f}/10). Stopping before any code is run.[/bold red]\n"
+                    "[dim]Try a more specific topic, raise MAX_REFINEMENT_ROUNDS, or pass --force to run it anyway.[/dim]"
+                )
+                return {"status": "rejected", "workspace": str(workspace)}
+
+            if not review.approved:
+                ui.console.print("[yellow]Proceeding with a rejected hypothesis (forced).[/yellow]")
+
             exp.status = "coding"
             db_session.commit()
 
@@ -144,16 +173,16 @@ class ResearchOrchestrator:
             # PHASE 3: Code Generation & Pre-flight Audit (Coder & Reviewer)
             # -------------------------------------------------------------
             ui.print_agent_header(self.coder.name, self.coder.role, "Synthesizing computational experiment (experiment.py)...")
-            with ui.console.status("[green]Generating experiment.py...[/green]"):
+            with ui.console.status("Generating experiment.py..."):
                 script_code = self.coder.generate_experiment_code(hypothesis)
 
             ui.print_agent_header(self.reviewer.name, self.reviewer.role, "Performing pre-flight safety & reproducibility audit...")
-            with ui.console.status("[yellow]Auditing code for seed stability and metric logging...[/yellow]"):
+            with ui.console.status("Auditing code for seed stability and metric logging..."):
                 code_audit = self.reviewer.audit_code(script_code, hypothesis)
 
             if not code_audit.approved:
                 ui.console.print(f"[yellow]Reviewer flagged potential code risks: {code_audit.audit_notes}[/yellow]")
-                with ui.console.status("[green]Refining experiment code...[/green]"):
+                with ui.console.status("Refining experiment code..."):
                     script_code = self.coder.generate_experiment_code(
                         hypothesis, audit_feedback=code_audit.audit_notes
                     )
@@ -178,7 +207,7 @@ class ResearchOrchestrator:
                     "system",
                     f"Executing experiment in isolated sandbox (Attempt #{attempt})...",
                 )
-                with ui.console.status(f"[bold green]Running experiment.py (Attempt {attempt})...[/bold green]"):
+                with ui.console.status(f"Running experiment.py (Attempt {attempt})..."):
                     result = sandbox.run_script(script_file, workspace)
 
                 # A clean exit without metrics.json is still a failed experiment:
@@ -219,9 +248,9 @@ class ResearchOrchestrator:
                     ui.print_agent_header(
                         self.coder.name,
                         "coder",
-                        f"[bold red]AUTONOMOUS DEBUGGING ACTIVATED[/bold red] - Analyzing traceback and fixing experiment.py...",
+                        "Auto-debugging: reading the traceback and patching experiment.py...",
                     )
-                    with ui.console.status("[bold magenta]Coder repairing code from stderr traceback...[/bold magenta]"):
+                    with ui.console.status("Coder repairing code from stderr traceback..."):
                         current_code = self.coder.debug_experiment_code(
                             failing_code=current_code,
                             stderr_traceback=result.error_traceback or result.stderr,
@@ -248,12 +277,12 @@ class ResearchOrchestrator:
             ui.print_agent_header(self.synthesizer.name, self.synthesizer.role, "Synthesizing figures, LaTeX paper, and research report...")
 
             # 1. Visualization (plot.py)
-            with ui.console.status("[magenta]Generating publication-grade visualization script (plot.py)...[/magenta]"):
+            with ui.console.status("Generating publication-grade visualization script (plot.py)..."):
                 plot_code = self.synthesizer.generate_plot_script(last_result.metrics, hypothesis)
                 plot_file = workspace / "plot.py"
                 plot_file.write_text(plot_code, encoding="utf-8")
 
-            with ui.console.status("[magenta]Executing plot.py to render publication figure...[/magenta]"):
+            with ui.console.status("Executing plot.py to render publication figure..."):
                 plot_run = sandbox.run_script(plot_file, workspace, clear_metrics=False)
 
             plot_png = workspace / "plot.png"
@@ -264,7 +293,7 @@ class ResearchOrchestrator:
                                  f"{(plot_run.error_traceback or plot_run.stderr or '').strip()[-300:]}[/yellow]")
 
             # 2. LaTeX Manuscript (paper.tex)
-            with ui.console.status("[magenta]Drafting formal academic manuscript (paper.tex)...[/magenta]"):
+            with ui.console.status("Drafting formal academic manuscript (paper.tex)..."):
                 latex_content = self.synthesizer.generate_latex_paper(
                     hypothesis=hypothesis,
                     metrics=last_result.metrics,
@@ -276,7 +305,7 @@ class ResearchOrchestrator:
                 ui.console.print("[green]✔ Generated academic LaTeX paper (paper.tex).[/green]")
 
             # 3. Markdown Report (report.md)
-            with ui.console.status("[magenta]Compiling comprehensive Markdown report (report.md)...[/magenta]"):
+            with ui.console.status("Compiling comprehensive Markdown report (report.md)..."):
                 md_content = self.synthesizer.generate_markdown_report(
                     hypothesis=hypothesis,
                     metrics=last_result.metrics,
@@ -287,7 +316,7 @@ class ResearchOrchestrator:
                 ui.console.print("[green]✔ Generated comprehensive Markdown report (report.md).[/green]")
 
             # 4. Standalone Academic HTML & PDF Compilation
-            with ui.console.status("[magenta]Compiling publication-grade academic paper (HTML & PDF)...[/magenta]"):
+            with ui.console.status("Compiling publication-grade academic paper (HTML & PDF)..."):
                 html_content = self.synthesizer.generate_html_paper(
                     hypothesis=hypothesis,
                     metrics=last_result.metrics,
@@ -340,7 +369,7 @@ class ResearchOrchestrator:
             ui.console.print("\n")
             ui.print_artifacts_summary(artifacts_dict)
 
-            ui.console.print("\n[bold cyan]─── EXECUTIVE SUMMARY & FINDINGS ───[/bold cyan]\n")
+            ui.console.print("\n[bold]─── EXECUTIVE SUMMARY & FINDINGS ───[/bold]\n")
             ui.print_markdown(md_content[:2500] + ("\n\n*(Full report saved to report.md)*" if len(md_content) > 2500 else ""))
 
             return {

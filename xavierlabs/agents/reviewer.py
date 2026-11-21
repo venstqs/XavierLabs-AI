@@ -4,6 +4,10 @@ from xavierlabs.agents.base import BaseAgent
 from xavierlabs.agents.ideator import HypothesisConfig
 
 
+APPROVAL_MIN_OVERALL = 7.0
+APPROVAL_MIN_FEASIBILITY = 6.0
+
+
 class HypothesisReview(BaseModel):
     novelty_score: float = Field(description="Score from 1 to 10 evaluating intellectual novelty")
     rigor_score: float = Field(description="Score from 1 to 10 evaluating theoretical and mathematical soundness")
@@ -77,7 +81,13 @@ Evaluate this hypothesis rigorously. Return a strict JSON object with:
             user_prompt=user_prompt,
             temperature=0.2,
         )
-        return HypothesisReview(**json_dict)
+        review = HypothesisReview(**json_dict)
+        # Enforce the stated approval rule in code; LLMs often contradict their own scores.
+        review.approved = (
+            review.overall_score >= APPROVAL_MIN_OVERALL
+            and review.feasibility_score >= APPROVAL_MIN_FEASIBILITY
+        )
+        return review
 
     def audit_code(self, script_code: str, hypothesis: HypothesisConfig) -> CodeAudit:
         """Audits the Coder's generated experiment.py script before sandbox execution."""

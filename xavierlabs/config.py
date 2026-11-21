@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from typing import Any, Literal, Optional
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -70,9 +70,17 @@ class Settings(BaseSettings):
     DOCKER_NETWORK: str = "none"  # "none" = no network access for generated code; use "bridge" to allow it
     DOCKER_MEM_LIMIT: str = "2g"
     DOCKER_CPUS: float = 2.0
-    EXECUTION_TIMEOUT: int = 180  # seconds
-    EXPERIMENT_TIMEOUT_SECONDS: int = 180
+    # Seconds per sandboxed script run. EXPERIMENT_TIMEOUT_SECONDS is accepted as a legacy alias.
+    EXECUTION_TIMEOUT: int = Field(
+        default=180,
+        validation_alias=AliasChoices("EXECUTION_TIMEOUT", "EXPERIMENT_TIMEOUT_SECONDS"),
+    )
     MAX_DEBUG_RETRIES: int = 3
+
+    # Hypothesis peer review: how many times the Ideator may revise a rejected hypothesis,
+    # and whether to run the experiment anyway if the final revision is still rejected.
+    MAX_REFINEMENT_ROUNDS: int = 2
+    PROCEED_IF_REJECTED: bool = False
 
     # Storage & Persistence
     DB_PATH: str = "xavierlabs.db"

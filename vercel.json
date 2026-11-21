@@ -12,14 +12,6 @@
       "dest": "/docs/assets/$1"
     },
     {
-      "src": "/style.css",
-      "dest": "/docs/style.css"
-    },
-    {
-      "src": "/app.js",
-      "dest": "/docs/app.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/docs/index.html"
     }

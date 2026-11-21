@@ -1,140 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>XavierLabs AI</title>
-  <meta name="description" content="An open-source research agent for your terminal. It reads the literature, runs real experiments in a sandbox, fixes its own bugs, and writes the paper.">
-  <meta name="author" content="Adrian Xavier Moral">
-  <meta name="theme-color" content="#0a0a0a">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <meta name="description" content="An open-source research agent for your terminal. It reads the literature, runs real experiments in a sandbox, fixes its own bugs, and writes the paper." />
+  <meta name="author" content="Adrian Xavier Moral" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
 
   <script>
-    try { var t = localStorage.getItem('theme'); if (t !== 'light' && t !== 'dark') t = 'dark'; document.documentElement.dataset.theme = t; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    try {
+      var t = localStorage.getItem('theme');
+      if (t !== 'light' && t !== 'dark') t = 'dark';
+      document.documentElement.dataset.theme = t;
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', t === 'dark' ? '#0a0a0a' : '#ffffff');
+    } catch (e) {
+      document.documentElement.dataset.theme = 'dark';
+    }
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="./assets/index-BWdBJZMK.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Bj06ZTu9.css">
 </head>
 <body>
-
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="mark" viewBox="0 0 40 40">
-      <rect width="40" height="40" rx="10" fill="currentColor"/>
-      <g transform="translate(7 7) scale(.65)">
-        <mask id="mark-m"><rect width="40" height="40" fill="#fff"/><polygon points="2.4,36 11.6,36 31.41,4 22.21,4" fill="#000"/></mask>
-        <g transform="translate(6.33 0) skewX(-10)" style="fill: var(--bg)">
-          <polygon points="30.0,36 36.0,36 16.19,4 10.19,4" mask="url(#mark-m)"/>
-          <polygon points="4.0,36 10.0,36 29.81,4 23.81,4"/>
-          <rect x="12.076" y="25.8" width="15.848" height="4.0"/>
-        </g>
-      </g>
-    </symbol>
-    <symbol id="gh" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12.02c0 4.43 2.87 8.18 6.84 9.5.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03A9.56 9.56 0 0 1 12 6.84c.85 0 1.7.12 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.86l-.01 2.75c0 .27.18.58.69.48A10.02 10.02 0 0 0 22 12.02C22 6.48 17.52 2 12 2Z"/></symbol>
-    <symbol id="sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
-    <symbol id="moon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M20.5 14.1A8.5 8.5 0 0 1 9.9 3.5a8.5 8.5 0 1 0 10.6 10.6Z"/></symbol>
-    <symbol id="copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></g></symbol>
-  </svg>
-
-  <div class="navwrap">
-    <nav class="wrap nav" aria-label="Main">
-      <a class="logo" href="#top"><svg class="logo-mark"><use href="#mark"/></svg><span>XavierLabs</span></a>
-      <div class="pill-nav">
-        <a href="#about" class="active">About</a>
-        <a href="#how">How it works</a>
-        <a href="#install">Install</a>
-      </div>
-      <div class="nav-right">
-        <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle color theme">
-          <svg class="i-sun"><use href="#sun"/></svg><svg class="i-moon"><use href="#moon"/></svg>
-        </button>
-        <a class="btn btn-solid btn-sm" href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener"><svg><use href="#gh"/></svg>GitHub</a>
-      </div>
-    </nav>
-  </div>
-
-  <main id="top">
-    <section class="hero" id="about">
-      <canvas class="waves" id="waves" aria-hidden="true"></canvas>
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <p class="status"><span class="dot"></span>Open source research agent</p>
-          <h1>Research on autopilot.</h1>
-          <p class="rotator">It <span class="word-pill" id="wordPill" aria-live="polite">reads the literature</span></p>
-          <p class="intro">
-            Give XavierLabs a question. A team of four AI agents finds the papers, tests a hypothesis with real code in a sandbox,
-            fixes its own crashes, and hands you a finished paper.
-          </p>
-          <div class="cta">
-            <a class="btn btn-solid" href="#install">Get started</a>
-            <a class="btn btn-ghost" href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener">View on GitHub</a>
-          </div>
-        </div>
-
-        <div class="term-card">
-          <div class="term-top"><span></span><span></span><span></span><em>xavier research</em></div>
-          <pre class="term-body" id="term"></pre>
-        </div>
-      </div>
-
-      <div class="tags" aria-label="Works with">
-        <div class="tags-track" id="tags"></div>
-      </div>
-    </section>
-
-    <section class="wrap section" id="how">
-      <h2>How it works</h2>
-      <p class="section-sub">One command runs the whole loop. Every number in the paper comes from code that actually ran.</p>
-      <ol class="steps">
-        <li><span class="step-n">1</span><h3>Find</h3><p>Searches ArXiv and Semantic Scholar, then writes a hypothesis you can test.</p></li>
-        <li><span class="step-n">2</span><h3>Review</h3><p>A reviewer agent scores the idea and sends weak ones back before any code runs.</p></li>
-        <li><span class="step-n">3</span><h3>Experiment</h3><p>Writes Python and runs it in a sandbox. If it crashes, it reads the error and fixes it.</p></li>
-        <li><span class="step-n">4</span><h3>Write</h3><p>Plots the results and writes the paper as PDF, LaTeX, HTML and Markdown.</p></li>
-      </ol>
-    </section>
-
-    <section class="wrap section" id="install">
-      <h2>Install</h2>
-      <p class="section-sub">Python 3.10 or newer. Works with any model provider, or offline with Ollama.</p>
-
-      <div class="install">
-        <div class="seg" role="tablist" aria-label="Install method">
-          <button type="button" class="seg-btn active" data-tab="pip">pip</button>
-          <button type="button" class="seg-btn" data-tab="uv">uv</button>
-          <button type="button" class="seg-btn" data-tab="git">git</button>
-        </div>
-        <div class="code-row">
-          <code id="installCmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</code>
-          <button class="icon-btn" type="button" id="copyBtn" aria-label="Copy install command"><svg><use href="#copy"/></svg></button>
-        </div>
-      </div>
-
-      <div class="cmd-list">
-        <div><code>xavier</code><span>Open the interactive console</span></div>
-        <div><code>xavier research "your question"</code><span>Run the full loop and get a paper</span></div>
-        <div><code>xavier paper &lt;folder&gt; --open</code><span>Open a finished paper</span></div>
-        <div><code>xavier history</code><span>See past runs</span></div>
-      </div>
-    </section>
-
-    <footer class="wrap footer">
-      <a class="footer-brand" href="https://adrianfolio.vercel.app/" target="_blank" rel="noopener"><svg class="logo-mark"><use href="#mark"/></svg>XavierLabs</a>
-      <span>Built by Adrian Xavier Moral</span>
-      <span class="footer-right">MIT License</span>
-    </footer>
-  </main>
-
-  <nav class="dock" aria-label="Quick links">
-    <a href="#top" aria-label="Top"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></a>
-    <a href="#how" aria-label="How it works"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/></svg></a>
-    <a href="#install" aria-label="Install"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m4 17 6-6-6-6M12 19h8"/></svg></a>
-    <span class="dock-sep"></span>
-    <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener" aria-label="GitHub"><svg><use href="#gh"/></svg></a>
-    <button type="button" data-theme-toggle aria-label="Toggle color theme"><svg class="i-sun"><use href="#sun"/></svg><svg class="i-moon"><use href="#moon"/></svg></button>
-  </nav>
-
-  <script src="app.js"></script>
+  <div id="root"></div>
 </body>
 </html>

@@ -312,6 +312,8 @@ nav.header-nav a:hover {
   color: var(--sage);
   font-weight: bold;
   user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .term-typed {

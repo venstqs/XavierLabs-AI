@@ -202,9 +202,17 @@ function runTerminalDemo(cmdKey) {
     stepIndex++;
 
     if (item.isInput) {
+      // Chat-console inputs start with the "xavier ›" prompt markup: show that prompt
+      // instead of the shell prompt, and type only the user's text.
+      const chatPrefix = /^\[bold #9ec97b\]xavier\[\/bold #9ec97b\] \[dim\]›\[\/dim\] /;
+      const isChat = chatPrefix.test(item.text);
+      const typedText = (isChat ? item.text.replace(chatPrefix, '') : item.text).replace(/\n+$/, '');
+      const promptHtml = isChat
+        ? '<span class="term-prompt">xavier</span><span class="term-dim">›</span>'
+        : '<span class="term-prompt">xavier@lab:~$</span>';
       const promptDiv = document.createElement('div');
       promptDiv.className = 'term-prompt-line';
-      promptDiv.innerHTML = `<span class="term-prompt">xavier@lab:~$</span> <span class="term-typed typed-input"></span><span class="cursor-blink"></span>`;
+      promptDiv.innerHTML = `${promptHtml} <span class="term-typed typed-input"></span><span class="cursor-blink"></span>`;
       termBody.appendChild(promptDiv);
 
       const targetSpan = promptDiv.querySelector('.typed-input');
@@ -216,8 +224,8 @@ function runTerminalDemo(cmdKey) {
           clearInterval(currentInterval);
           return;
         }
-        if (charIdx < item.text.length) {
-          targetSpan.textContent += item.text[charIdx];
+        if (charIdx < typedText.length) {
+          targetSpan.textContent += typedText[charIdx];
           charIdx++;
           termBody.scrollTop = termBody.scrollHeight;
         } else {

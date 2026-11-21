@@ -1,13 +1,15 @@
 import sys
-from typing import Optional, List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict
+
+from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from rich.markdown import Markdown
-from rich.live import Live
-from rich.layout import Layout
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
+from xavierlabs import __version__
 
 if sys.platform == "win32":
     try:
@@ -18,31 +20,45 @@ if sys.platform == "win32":
 
 console = Console(legacy_windows=False)
 
-PIXEL_BANNER_BLOCK = r"""
-                        █                   ██           █            
-                                             █           █            
- █   █   ████  ██ ██   ██     ███   █ ██     █     ████  ████    ████ 
-  █ █   █   █   █ █     █    █   █  ██       █    █   █  █   █  █     
-   █    █   █   █ █     █    █████  █        █    █   █  █   █   ███  
-  █ █   █  ██    █      █    █      █        █    █  ██  █   █      █ 
- █   █   ██ █    █     ███    ███   █       ███    ██ █  ████   ████  
-"""
+# ---------------------------------------------------------------------------
+# XavierLabs terminal theme
+# Monochrome ink on the terminal's own background, a single green "live" accent,
+# and red/yellow reserved for failures and warnings. Mirrors the XavierLabs web brand.
+# ---------------------------------------------------------------------------
+LIVE = "green"
+LINE = "grey27"
+MUTED = "grey58"
+TABLE_BOX = box.SIMPLE_HEAD
 
-PIXEL_BANNER_ASCII = r"""
-                        #                   ##           #            
-                                             #           #            
- #   #   ####  ## ##   ##     ###   # ##     #     ####  ####    #### 
-  # #   #   #   # #     #    #   #  ##       #    #   #  #   #  #     
-   #    #   #   # #     #    #####  #        #    #   #  #   #   ###  
-  # #   #  ##    #      #    #      #        #    #  ##  #   #      # 
- #   #   ## #    #     ###    ###   #       ###    ## #  ####   ####  
-"""
+# Small rendition of the XavierLabs mark (a slanted "A" with a crossbar)
+MARK = ("  ╱╲ ", " ╱──╲", "╱    ╲")
+MARK_ASCII = ("  /\\ ", " /--\\", "/    \\")
+
+STEPS = {
+    "ideator": "01",
+    "reviewer": "02",
+    "coder": "03",
+    "system": "04",
+    "synthesizer": "05",
+}
+
+
+def _table(title: str = "") -> Table:
+    return Table(
+        title=f"[bold]{title}[/bold]" if title else None,
+        title_justify="left",
+        box=TABLE_BOX,
+        border_style=LINE,
+        header_style=f"{MUTED}",
+        show_header=True,
+        pad_edge=False,
+    )
 
 
 class TerminalUI:
     """
-    Feynman-Style Reactive Terminal Interface for XavierLabs AI.
-    Renders live telemetry, agent transitions, and scientific artifacts.
+    Terminal interface for XavierLabs AI: renders agent transitions,
+    sandbox telemetry, and research artifacts in the XavierLabs style.
     """
 
     def __init__(self):
@@ -50,83 +66,124 @@ class TerminalUI:
 
     def print_banner(self):
         try:
-            self.console.print(PIXEL_BANNER_BLOCK, style="bold #9ec97b")
-        except UnicodeEncodeError:
-            self.console.print(PIXEL_BANNER_ASCII, style="bold #9ec97b")
+            "".join(MARK).encode(self.console.encoding or "utf-8")
+            mark = MARK
+        except (UnicodeEncodeError, LookupError):
+            mark = MARK_ASCII
 
-        self.console.print(
-            "[bold #9ec97b]x a v i e r l a b s[/] [dim]•[/] [dim #a3c983]terminal-native computational research swarm[/]\n",
-            justify="center",
-        )
+        lines = [
+            Text.assemble((mark[0], "bold"), "  ", ("XavierLabs", "bold")),
+            Text.assemble((mark[1], "bold"), "  ", ("autonomous computational research", MUTED)),
+            Text.assemble((mark[2], "bold"), " ", ("●", LIVE), (f" ready · v{__version__}", MUTED)),
+        ]
+        self.console.print()
+        for line in lines:
+            self.console.print(line)
+        self.console.print()
 
     def print_agent_header(self, agent_name: str, role: str, action: str):
-        colors = {
-            "ideator": "cyan",
-            "reviewer": "yellow",
-            "coder": "green",
-            "synthesizer": "magenta",
-            "system": "blue",
-        }
-        color = colors.get(role.lower(), "white")
-        badge = f"[{color} bold]● {agent_name.upper()} ({role.upper()})[/]"
-        self.console.print(Panel(f"{action}", title=badge, border_style=color))
+        step = STEPS.get(role.lower(), "··")
+        name = agent_name.replace("The ", "")
+        self.console.print()
+        self.console.rule(
+            f"[{MUTED}]{step}[/]  [bold]{name}[/bold]",
+            align="left",
+            style=LINE,
+        )
+        self.console.print(f"[{LIVE}]●[/] {action}")
 
     def print_hypothesis(self, hypothesis: Any):
-        table = Table(title="[bold cyan]Generated Computational Hypothesis[/bold cyan]", show_header=True)
-        table.add_column("Field", style="dim", width=20)
-        table.add_column("Details", style="white")
+        table = _table("Hypothesis")
+        table.add_column("Field", style=MUTED, width=20, no_wrap=True)
+        table.add_column("Details")
 
-        table.add_row("Title", hypothesis.title)
+        table.add_row("Title", f"[bold]{hypothesis.title}[/bold]")
         table.add_row("Motivation", hypothesis.motivation)
-        table.add_row("Theoretical Basis", hypothesis.theoretical_basis)
-        table.add_row("Expected Metrics", ", ".join(hypothesis.metrics))
-        table.add_row("Experimental Design", hypothesis.experimental_design)
+        table.add_row("Theoretical basis", hypothesis.theoretical_basis)
+        table.add_row("Metrics", ", ".join(hypothesis.metrics))
+        table.add_row("Design", hypothesis.experimental_design)
 
         self.console.print(table)
 
     def print_review(self, review: Any):
-        status = "[bold green]APPROVED[/bold green]" if review.approved else "[bold red]REJECTED (NEEDS REVISION)[/bold red]"
-        table = Table(title=f"Peer Review Assessment: {status}", show_header=True)
-        table.add_column("Criterion", style="dim")
-        table.add_column("Score (1-10)", justify="center")
+        status = f"[bold {LIVE}]approved[/]" if review.approved else "[bold red]needs revision[/]"
+        table = _table(f"Peer review · {status}")
+        table.add_column("Criterion", style=MUTED)
+        table.add_column("Score", justify="right")
+        table.add_column("", min_width=12)
 
-        table.add_row("Novelty", f"{review.novelty_score:.1f}/10")
-        table.add_row("Theoretical Rigor", f"{review.rigor_score:.1f}/10")
-        table.add_row("Feasibility", f"{review.feasibility_score:.1f}/10")
-        table.add_row("[bold]Overall Score[/bold]", f"[bold]{review.overall_score:.1f}/10[/bold]")
+        def bar(score: float) -> str:
+            filled = max(0, min(10, round(score)))
+            return f"[bold]{'━' * filled}[/][{LINE}]{'━' * (10 - filled)}[/]"
+
+        for label, score in (
+            ("Novelty", review.novelty_score),
+            ("Rigor", review.rigor_score),
+            ("Feasibility", review.feasibility_score),
+        ):
+            table.add_row(label, f"{score:.1f}", bar(score))
+        table.add_row("[bold]Overall[/bold]", f"[bold]{review.overall_score:.1f}[/bold]", bar(review.overall_score))
 
         self.console.print(table)
         if review.weaknesses:
-            self.console.print(f"[yellow]Identified Weaknesses/Risks:[/yellow] {', '.join(review.weaknesses)}")
+            self.console.print(f"[yellow]Weaknesses:[/yellow] {', '.join(review.weaknesses)}")
         if review.modifications_required:
-            self.console.print(f"[dim]Modifications Required: {review.modifications_required}[/dim]")
+            self.console.print(f"[{MUTED}]Requested changes: {review.modifications_required}[/]")
 
     def print_execution_telemetry(self, result: Any, iteration: int):
-        status_color = "green" if result.success else "red"
-        title = f"[bold {status_color}]Sandbox Run #{iteration} Telemetry ({result.sandbox_type})[/bold {status_color}]"
+        color = LIVE if result.success else "red"
+        if result.success:
+            state = "passed"
+        elif result.returncode == 0:
+            state = "failed · no metrics.json"
+        else:
+            state = f"failed · exit {result.returncode}"
+        title = f"[{color}]●[/] [bold]Run #{iteration}[/bold] [{MUTED}]{state} · {result.execution_time:.2f}s · {result.sandbox_type}[/]"
 
-        content = f"[bold]Duration:[/bold] {result.execution_time:.2f}s | [bold]Return Code:[/bold] {result.returncode}\n\n"
+        body = Text()
         if result.metrics:
-            content += f"[bold green]Parsed Metrics:[/bold green]\n"
+            width = min(28, max(len(str(k)) for k in result.metrics))
+            lines = []
             for k, v in result.metrics.items():
-                content += f"  • {k}: {v}\n"
+                shown = str(v)
+                if len(shown) > 120:
+                    shown = shown[:117] + "..."
+                lines.append((str(k).ljust(width), shown))
+            for i, (k, shown) in enumerate(lines):
+                body.append(k, style=MUTED)
+                body.append(f"  {shown}" + ("\n" if i < len(lines) - 1 else ""))
 
         if not result.success and result.error_traceback:
-            content += f"\n[bold red]Error / Traceback:[/bold red]\n[dim]{result.error_traceback}[/dim]"
-        elif result.stdout:
-            content += f"\n[dim bold]Stdout (truncated):[/dim bold]\n[dim]{result.stdout[-400:]}[/dim]"
+            body.append("\n\n" if body else "")
+            body.append(result.error_traceback.strip()[-1500:], style="red")
+        elif not result.metrics and result.stdout:
+            body.append(result.stdout.strip()[-400:], style=MUTED)
 
-        self.console.print(Panel(content, title=title, border_style=status_color))
+        self.console.print(Panel(
+            body if body else Text("no output", style=MUTED),
+            title=title,
+            title_align="left",
+            border_style=LINE if result.success else "red",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        ))
 
     def print_artifacts_summary(self, artifacts: Dict[str, str]):
-        table = Table(title="[bold magenta]Compiled Research Artifacts[/bold magenta]", show_header=True)
-        table.add_column("Artifact Type", style="cyan")
-        table.add_column("File Location", style="white")
+        paths = [Path(p) for p in artifacts.values() if p and p != "N/A"]
+        root = paths[0].parent if paths else None
+        table = _table("Artifacts")
+        table.add_column("Type", style=MUTED, no_wrap=True)
+        table.add_column("File")
 
         for atype, path in artifacts.items():
-            table.add_row(atype, path)
+            shown = path
+            if root and path != "N/A" and Path(path).parent == root:
+                shown = Path(path).name
+            table.add_row(atype, shown)
 
         self.console.print(table)
+        if root:
+            self.console.print(f"[{MUTED}]in {root}[/]")
 
     def print_markdown(self, md_text: str):
         self.console.print(Markdown(md_text))

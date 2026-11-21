@@ -152,7 +152,7 @@ DEEPSEEK_API_KEY=sk-...
 ## CLI Usage
 
 ### Interactive Chatbot Mode
-Launch XavierLabs in an interactive, Antigravity CLI-style conversational session:
+Launch XavierLabs in an interactive conversational session:
 
 ```bash
 xavier
@@ -161,24 +161,22 @@ xavier
 In interactive mode, you can chat conversationally about research ideas, refine experimental parameters, and trigger autonomous runs seamlessly:
 
 ```text
-xavier [ready] › /help
-┌────────────────────────┬─────────────────────────────────────────────────┐
-│ Command                │ Description                                     │
-├────────────────────────┼─────────────────────────────────────────────────┤
-│ /research <topic>      │ Launch autonomous research loop                 │
-│ /paper [folder]        │ Inspect or open compiled research paper         │
-│ /history               │ Browse and inspect past experiment records      │
-│ /model [name]          │ Switch model (Groq, DeepSeek, Ollama, etc.)     │
-│ /config                │ View compute telemetry & detected API keys      │
-│ /exit                  │ Exit interactive session                        │
-└────────────────────────┴─────────────────────────────────────────────────┘
+  ╱╲   XavierLabs
+ ╱──╲  autonomous computational research
+╱    ╲ ● ready · v0.1.0
 
-xavier [ready] › I want to test AdamW vs Lion optimizer on non-convex loss
-● THE IDEATOR Analyzing hypothesis novelty and testable metrics...
-  • Proposed hypothesis: Lion yields 1.48x convergence acceleration over AdamW.
+╭──────────────────────────────────────────────────╮
+│  model     groq/llama-3.3-70b-versatile          │
+│  sandbox   Docker Container                      │
+╰──────────────────────────────────────────────────╯
+Describe a topic to brainstorm, /research <topic> to run the swarm, or /help.
+
+xavier › I want to test AdamW vs Lion optimizer on non-convex loss
+Lion's sign-based update gives uniform per-coordinate steps, which may help
+escape the shallow local minima of Rastrigin-like surfaces...
 
 Would you like XavierLabs to launch an autonomous research run on this topic now? [Y/n]: y
-▶ Launching Autonomous Research Swarm...
+▶ Launching research swarm: AdamW vs Lion optimizer on non-convex loss
 ```
 
 ---
@@ -194,6 +192,10 @@ xavier research "Optimize learning rate decay" --codebase ./my_project
 
 # Set custom auto-debugging retry limits
 xavier research "Stochastic multi-strain SIR epidemic dynamics" --retries 5
+
+# Run the experiment even if the Reviewer still rejects the hypothesis
+# (by default the run stops after MAX_REFINEMENT_ROUNDS revisions)
+xavier research "A deliberately exploratory idea" --force
 ```
 
 ---

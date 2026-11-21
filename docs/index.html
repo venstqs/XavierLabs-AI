@@ -3,27 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>xavierlabs · autonomous computational research engine</title>
+  <title>xavierlabs — autonomous computational scientific research engine</title>
   <meta name="description" content="A terminal-native research engine that runs computational experiments from hypothesis to LaTeX paper.">
-  <meta name="author" content="Adrian Xavier Moral">
-  <meta name="theme-color" content="#0a0a0a">
-  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
-  <script>
-    try { var t = localStorage.getItem('theme'); if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
-  </script>
-
+  <!-- Google Fonts: Silkscreen (Pixel) + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;600&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-IDqFXIKH.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BRcfNFrg.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="root"></div>
-  <noscript>
-    <p style="padding:24px;font-family:system-ui">xavierlabs: terminal-native computational research engine.
-      <a href="https://github.com/venstqs/XavierLabs-AI">View on GitHub</a></p>
-  </noscript>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container header-inner">
+      <a href="#" class="pixel-logo">xavierlabs</a>
+
+      <nav class="header-nav">
+        <a href="#demo">demo</a>
+        <a href="#features">features</a>
+        <a href="#commands">commands</a>
+        <a href="#quickstart">quickstart</a>
+        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" class="btn-github-nav">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-brand-name">xavierlabs</div>
+      <h1 class="hero-headline">Terminal-native computational scientific research engine.</h1>
+      <p class="hero-subtext">
+        From literature review to compiled LaTeX papers, in one command.
+      </p>
+
+      <!-- Install Widget -->
+      <div class="install-container">
+        <div class="install-tabs">
+          <button class="tab-btn active" data-tab="pip">pip</button>
+          <button class="tab-btn" data-tab="uv">uv</button>
+          <button class="tab-btn" data-tab="git">git clone</button>
+        </div>
+        <div class="install-box">
+          <code class="install-code" id="installCode"><span class="prompt">$</span>pip install git+https://github.com/venstqs/XavierLabs-AI.git</code>
+          <button class="btn-copy" data-copy-target="installCode">Copy</button>
+        </div>
+        <div class="install-meta">
+          Python 3.10+ · macOS, Linux, Windows · Open Source (MIT)
+        </div>
+      </div>
+
+      <!-- Terminal Preview -->
+      <div class="terminal-wrapper" id="demo">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <div class="terminal-tabs">
+            <button class="term-tab active" data-cmd="chat">xavier chat</button>
+            <button class="term-tab" data-cmd="research">xavier research</button>
+            <button class="term-tab" data-cmd="paper">xavier paper</button>
+            <button class="term-tab" data-cmd="history">xavier history</button>
+            <button class="term-tab" data-cmd="config">xavier config</button>
+          </div>
+        </div>
+        <div class="terminal-body" id="terminalBody">
+          <!-- Live interactive stream rendered by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Simple Features Grid -->
+    <section class="features-grid" id="features">
+      <div class="feature-col">
+        <div class="feature-idx">01 // DISCOVERY</div>
+        <h3>Literature &amp; Hypothesis</h3>
+        <p>
+          Queries ArXiv and Semantic Scholar without paid API keys. Identifies open gaps in computational research and formulates mathematically testable hypotheses.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <div class="feature-idx">02 // PEER REVIEW</div>
+        <h3>Adversarial Audit</h3>
+        <p>
+          Simulates an expert peer reviewer to critique mathematical soundness and feasibility before code runs. Scores proposals from 1 to 10 and rejects ill-posed formulations.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <div class="feature-idx">03 // CONTAINMENT</div>
+        <h3>Sandboxed Auto-Debugger</h3>
+        <p>
+          Runs generated simulations in Docker or isolated local sandboxes. When code crashes, it intercepts the stderr traceback and autonomously rewrites and repairs the script.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <div class="feature-idx">04 // SIMULATION</div>
+        <h3>Empirical Verification</h3>
+        <p>
+          Writes self-contained scientific Python simulations (NumPy, SciPy). Fixes deterministic seeds and outputs hard computed results to <code>metrics.json</code>.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <div class="feature-idx">05 // SYNTHESIS</div>
+        <h3>Publication-Ready Papers</h3>
+        <p>
+          Renders 300-DPI Seaborn figures and compiles complete academic manuscripts in LaTeX (<code>paper.tex</code>), camera-ready PDFs (<code>paper.pdf</code>), and Markdown.
+        </p>
+      </div>
+
+      <div class="feature-col">
+        <div class="feature-idx">06 // MULTI-MODEL</div>
+        <h3>Universal Model Support</h3>
+        <p>
+          Connect Groq for sub-second execution, DeepSeek for mathematical reasoning, OpenRouter for 100+ models, or run 100% privately and offline via local Ollama.
+        </p>
+      </div>
+    </section>
+
+    <!-- CLI Commands Reference -->
+    <section class="workflow-box" id="commands">
+      <div class="workflow-header">// CLI COMMANDS &amp; WORKFLOW</div>
+      <div class="workflow-code">
+        <span class="cmd">xavier</span> <span class="comment"># Start interactive chatbot console (Antigravity CLI style)</span><br>
+        <span class="cmd">xavier research "Your research inquiry"</span> <span class="comment"># Run autonomous end-to-end loop</span><br>
+        <span class="cmd">xavier paper experiments/your_folder --open</span> <span class="comment"># View and open compiled PDF / LaTeX paper</span><br>
+        <span class="cmd">xavier history</span> <span class="comment"># Browse audit trail of past computational experiments</span><br>
+        <span class="cmd">xavier config</span> <span class="comment"># Inspect active LLM model, detected API keys, and sandbox</span>
+      </div>
+    </section>
+
+    <!-- Quickstart Workflow -->
+    <section class="workflow-box" id="quickstart">
+      <div class="workflow-header">// QUICKSTART WORKFLOW</div>
+      <div class="workflow-code">
+        <span class="comment"># 1. Install the CLI</span><br>
+        <span class="cmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</span><br><br>
+
+        <span class="comment"># 2. Add your LLM provider (Groq, DeepSeek, OpenRouter, or Ollama)</span><br>
+        <span class="cmd">echo "GROQ_API_KEY=gsk_..." &gt; .env</span><br>
+        <span class="comment"># or: echo "DEEPSEEK_API_KEY=sk-..." &gt; .env</span><br>
+        <span class="comment"># or: echo "OPENROUTER_API_KEY=sk-or-..." &gt; .env</span><br><br>
+
+        <span class="comment"># 3. Launch interactive chatbot mode</span><br>
+        <span class="cmd">xavier</span><br><br>
+
+        <span class="comment"># 4. Or run direct one-liner autonomous research</span><br>
+        <span class="cmd">xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"</span><br><br>
+
+        <span class="comment"># 5. View and open the compiled research paper</span><br>
+        <span class="cmd">xavier paper experiments/your_experiment_folder --open</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        xavierlabs-ai · MIT License · Created by <a href="https://github.com/venstqs" target="_blank">@venstqs</a>
+      </div>
+      <div>
+        <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank">GitHub Repository ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script src="app.js"></script>
 </body>
 </html>

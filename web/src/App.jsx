@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import Threads from './components/rb/Threads.jsx';
 import SplitText from './components/rb/SplitText.jsx';
 import RotatingText from './components/rb/RotatingText.jsx';
 import ShinyText from './components/rb/ShinyText.jsx';
@@ -7,7 +6,6 @@ import LogoLoop from './components/rb/LogoLoop.jsx';
 import MagicBento from './components/rb/MagicBento.jsx';
 import SpotlightCard from './components/rb/SpotlightCard.jsx';
 import DotGrid from './components/rb/DotGrid.jsx';
-import Dock from './components/rb/Dock.jsx';
 import TerminalCard from './components/TerminalCard.jsx';
 import {
   CheckIcon,
@@ -15,24 +13,22 @@ import {
   DocumentIcon,
   FlaskIcon,
   GitHubIcon,
-  HomeIcon,
   Mark,
   MoonIcon,
   SearchIcon,
   ShieldCheckIcon,
-  SunIcon,
-  TerminalIcon
+  SunIcon
 } from './components/Icons.jsx';
 
 const REPO_URL = 'https://github.com/venstqs/XavierLabs-AI';
 const REPO_GIT = `${REPO_URL}.git`;
+const THEME_KEY = 'xavierlabs-ai-theme';
 
-const ROTATING_WORDS = [
-  'reads the literature',
-  'tests a hypothesis',
-  'runs real experiments',
-  'fixes its own bugs',
-  'writes the paper'
+const ROTATING_PHRASES = [
+  'searches ArXiv & Semantic Scholar',
+  'scores hypotheses before running code',
+  'debugs failing sandbox runs automatically',
+  'compiles LaTeX, PDF, HTML & plots'
 ];
 
 const TAGS = [
@@ -59,61 +55,36 @@ const INSTALL_CMDS = {
 };
 
 const CLI_COMMANDS = [
-  ['xavier', 'Open the interactive console'],
-  ['xavier research "your question"', 'Run the full loop and get a paper'],
-  ['xavier paper <folder> --open', 'Open a finished paper'],
-  ['xavier history', 'See past runs']
+  ['xavier', 'Launch interactive research console'],
+  ['xavier research "question"', 'Run the full 4-agent loop to paper'],
+  ['xavier paper <folder> --open', 'Open generated PDF / HTML paper'],
+  ['xavier history', 'Browse past runs and metrics']
 ];
 
 const BENTO_THEME_STYLES = {
   dark: {
-    '--mb-surface': 'linear-gradient(180deg, #141414 0%, #0e0e0e 100%)',
-    '--mb-edge': '#232323',
-    '--mb-highlight': 'rgba(255, 255, 255, 0.05)',
-    '--mb-shadow': '0 24px 48px -28px rgba(0, 0, 0, 0.85)',
-    '--mb-tile': 'linear-gradient(180deg, #1f1f1f 0%, #141414 100%)',
-    '--mb-tile-edge': '#2c2c2c',
+    '--mb-surface': 'linear-gradient(180deg, #0b0b0b 0%, #050505 100%)',
+    '--mb-edge': '#1a1a1a',
+    '--mb-highlight': 'rgba(255, 255, 255, 0.04)',
+    '--mb-shadow': '0 20px 40px -28px rgba(0, 0, 0, 0.9)',
+    '--mb-tile': 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
+    '--mb-tile-edge': '#222222',
     '--mb-ink': '#f5f5f5',
-    '--mb-muted': '#a3a3a3',
-    '--mb-faint': '#6b6b6b',
-    '--mb-line': '#232323'
+    '--mb-muted': '#8a8a8a',
+    '--mb-faint': '#555555',
+    '--mb-line': '#1a1a1a'
   },
   light: {
     '--mb-surface': 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
-    '--mb-edge': '#e7e7e7',
+    '--mb-edge': '#e5e5e5',
     '--mb-highlight': '#ffffff',
-    '--mb-shadow': '0 18px 36px -26px rgba(0, 0, 0, 0.14)',
+    '--mb-shadow': '0 16px 32px -24px rgba(0, 0, 0, 0.12)',
     '--mb-tile': 'linear-gradient(180deg, #ffffff 0%, #f4f4f4 100%)',
     '--mb-tile-edge': '#e2e2e2',
     '--mb-ink': '#0a0a0a',
-    '--mb-muted': '#616161',
-    '--mb-faint': '#9a9a9a',
-    '--mb-line': '#e7e7e7'
-  }
-};
-
-const DOCK_THEME_STYLES = {
-  dark: {
-    '--dock-panel': 'rgba(17, 17, 17, 0.86)',
-    '--dock-panel-edge': '#262626',
-    '--dock-panel-highlight': 'rgba(255, 255, 255, 0.06)',
-    '--dock-tile': 'linear-gradient(180deg, #1b1b1b 0%, #0f0f0f 100%)',
-    '--dock-tile-edge': '#2a2a2a',
-    '--dock-tile-highlight': 'rgba(255, 255, 255, 0.08)',
-    '--dock-ink': '#f5f5f5',
-    '--dock-label-bg': '#141414',
-    '--dock-label-edge': '#2a2a2a'
-  },
-  light: {
-    '--dock-panel': 'rgba(255, 255, 255, 0.86)',
-    '--dock-panel-edge': '#e5e5e5',
-    '--dock-panel-highlight': '#ffffff',
-    '--dock-tile': 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)',
-    '--dock-tile-edge': '#e5e5e5',
-    '--dock-tile-highlight': '#ffffff',
-    '--dock-ink': '#0a0a0a',
-    '--dock-label-bg': '#ffffff',
-    '--dock-label-edge': '#e5e5e5'
+    '--mb-muted': '#5c5c5c',
+    '--mb-faint': '#999999',
+    '--mb-line': '#e5e5e5'
   }
 };
 
@@ -122,21 +93,42 @@ function readInitialTheme() {
   return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 }
 
+function copyText(text, onDone) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => {});
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      onDone();
+    } catch {
+      /* ignore */
+    }
+    document.body.removeChild(ta);
+  }
+}
+
 export default function App() {
   const [theme, setTheme] = useState(readInitialTheme);
-  const [activeSection, setActiveSection] = useState('about');
+  const [activeSection, setActiveSection] = useState('top');
   const [installTab, setInstallTab] = useState('pip');
-  const [copied, setCopied] = useState(false);
+  const [copiedHero, setCopiedHero] = useState(false);
+  const [copiedInstall, setCopiedInstall] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
-      localStorage.setItem('theme', theme);
+      localStorage.setItem(THEME_KEY, theme);
     } catch {
       /* ignore */
     }
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#ffffff');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
   }, [theme]);
 
   useEffect(() => {
@@ -147,10 +139,10 @@ export default function App() {
           if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
-      { rootMargin: '-45% 0px -50% 0px' }
+      { rootMargin: '-40% 0px -50% 0px' }
     );
 
-    ['about', 'how', 'install'].forEach(id => {
+    ['top', 'pipeline', 'install'].forEach(id => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -159,36 +151,6 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
-
-  const handleCopy = () => {
-    const text = INSTALL_CMDS[installTab];
-    const markCopied = () => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    };
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(markCopied).catch(() => {});
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        markCopied();
-      } catch {
-        /* ignore */
-      }
-      document.body.removeChild(ta);
-    }
-  };
-
-  const scrollToSection = id => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const tagLogos = useMemo(
     () =>
@@ -199,97 +161,67 @@ export default function App() {
     []
   );
 
-  const stepsItems = useMemo(
+  const pipelineItems = useMemo(
     () => [
       {
         id: 'find',
-        label: '01',
+        label: 'STAGE 01',
         icon: <SearchIcon />,
-        title: 'Find',
-        description: 'Searches ArXiv and Semantic Scholar, then writes a hypothesis you can test.'
+        title: 'Literature & Hypothesis',
+        description:
+          'Queries ArXiv and Semantic Scholar, synthesizes prior work, and formulates a falsifiable hypothesis with clear metrics.'
       },
       {
         id: 'review',
-        label: '02',
+        label: 'STAGE 02',
         icon: <ShieldCheckIcon />,
-        title: 'Review',
-        description: 'A reviewer agent scores the idea and sends weak ones back before any code runs.'
+        title: 'Adversarial Review',
+        description:
+          'A dedicated reviewer agent scores novelty and experimental rigor, rejecting weak plans before a single line of code runs.'
       },
       {
         id: 'experiment',
-        label: '03',
+        label: 'STAGE 03',
         icon: <FlaskIcon size={17} />,
-        title: 'Experiment',
-        description: 'Writes Python and runs it in a sandbox. If it crashes, it reads the error and fixes it.'
+        title: 'Sandboxed Execution',
+        description:
+          'Writes and runs Python in an isolated sandbox. When a run crashes, it inspects the traceback and patches its own code.'
       },
       {
         id: 'write',
-        label: '04',
+        label: 'STAGE 04',
         icon: <DocumentIcon />,
-        title: 'Write',
-        description: 'Plots the results and writes the paper as PDF, LaTeX, HTML and Markdown.'
+        title: 'Paper Synthesis',
+        description:
+          'Generates publication plots from real execution outputs and compiles the final report to PDF, LaTeX, HTML, and Markdown.'
       }
     ],
     []
   );
 
-  const dockItems = useMemo(
-    () => [
-      {
-        label: 'Top',
-        icon: <HomeIcon />,
-        active: activeSection === 'about',
-        onClick: () => scrollToSection('top')
-      },
-      {
-        label: 'How it works',
-        icon: <FlaskIcon />,
-        active: activeSection === 'how',
-        onClick: () => scrollToSection('how')
-      },
-      {
-        label: 'Install',
-        icon: <TerminalIcon />,
-        active: activeSection === 'install',
-        onClick: () => scrollToSection('install')
-      },
-      { separator: true },
-      {
-        label: 'GitHub',
-        icon: <GitHubIcon size={18} />,
-        onClick: () => window.open(REPO_URL, '_blank', 'noopener,noreferrer')
-      },
-      {
-        label: theme === 'dark' ? 'Light mode' : 'Dark mode',
-        icon: theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />,
-        onClick: toggleTheme
-      }
-    ],
-    [activeSection, theme]
-  );
-
-  const threadsColor = theme === 'dark' ? [0.96, 0.96, 0.96] : [0.06, 0.06, 0.06];
-
   return (
     <>
-      <div className="navwrap">
-        <nav className="wrap nav" aria-label="Main">
-          <a className="logo" href="#top">
+      <header className="topbar">
+        <div className="wrap topbar-inner">
+          <a className="brand" href="#top">
             <Mark id="nav-mark-m" />
-            <span>XavierLabs</span>
+            <span>XavierLabs AI</span>
+            <span className="brand-tag">MIT</span>
           </a>
-          <div className="pill-nav">
-            <a href="#about" className={activeSection === 'about' ? 'active' : ''}>
-              About
-            </a>
-            <a href="#how" className={activeSection === 'how' ? 'active' : ''}>
-              How it works
+
+          <nav className="nav-links" aria-label="Main">
+            <a href="#pipeline" className={activeSection === 'pipeline' ? 'active' : ''}>
+              Pipeline
             </a>
             <a href="#install" className={activeSection === 'install' ? 'active' : ''}>
               Install
             </a>
-          </div>
-          <div className="nav-right">
+            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+              Docs
+            </a>
+          </nav>
+
+          <div className="nav-actions">
             <button
               className="icon-btn"
               type="button"
@@ -304,150 +236,150 @@ export default function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <GitHubIcon />
+              <GitHubIcon size={15} />
               GitHub
             </a>
           </div>
-        </nav>
-      </div>
+        </div>
+      </header>
 
-      <main id="top">
-        <section className="hero" id="about">
-          <div className="hero-bg" aria-hidden="true">
-            <Threads
-              color={threadsColor}
-              amplitude={1.3}
-              distance={0.32}
-              lineCount={64}
-              speed={0.45}
-              thickness={0.55}
-              angle={18}
-              enableMouseInteraction={false}
+      <main>
+        <section className="hero" id="top">
+          <div className="hero-dots" aria-hidden="true">
+            <DotGrid
+              dotSize={2.8}
+              gap={26}
+              baseColor={theme === 'dark' ? '#1e1e1e' : '#dcdcdc'}
+              activeColor={theme === 'dark' ? '#888888' : '#222222'}
+              proximity={130}
+              strength={0.5}
+              opacity={theme === 'dark' ? 0.75 : 0.6}
+              mouseInteraction
+              clickShock={false}
             />
           </div>
 
-          <div className="wrap hero-grid">
-            <div className="hero-copy">
-              <p className="status">
+          <div className="wrap">
+            <div className="hero-head">
+              <p className="eyebrow">
                 <span className="dot" />
                 <ShinyText
-                  text="Open source research agent"
-                  color={theme === 'dark' ? '#a3a3a3' : '#616161'}
+                  text="Terminal-Native Computational Research Swarm"
+                  color={theme === 'dark' ? '#8a8a8a' : '#5c5c5c'}
                   shineColor={theme === 'dark' ? '#ffffff' : '#0a0a0a'}
-                  speed={3.2}
+                  speed={3.4}
                 />
               </p>
 
               <SplitText
-                text="Research on autopilot."
+                text="From question to paper."
                 tag="h1"
                 className="hero-title"
-                textAlign="left"
+                textAlign="center"
                 splitType="chars"
-                delay={28}
-                duration={0.8}
+                delay={24}
+                duration={0.75}
                 effect="rise"
               />
 
-              <p className="rotator">
-                <span>It</span>
+              <p className="hero-sub">
+                Give XavierLabs AI a research question in your terminal. Four specialized agents
+                run real experiments in a sandbox so every figure and number in the paper comes from
+                code that actually executed.
+              </p>
+
+              <div className="hero-rotate-line">
+                <span>$ xavier &rarr;</span>
                 <RotatingText
-                  texts={ROTATING_WORDS}
-                  mainClassName="word-pill"
-                  rotationInterval={2400}
-                  staggerDuration={0.02}
+                  texts={ROTATING_PHRASES}
+                  mainClassName="rotate-inline"
+                  rotationInterval={2600}
+                  staggerDuration={0.015}
                   splitBy="words"
                   effect="slide"
                   direction="up"
                 />
-              </p>
+              </div>
 
-              <p className="intro">
-                Give XavierLabs a question. A team of four AI agents finds the papers, tests a
-                hypothesis with real code in a sandbox, fixes its own crashes, and hands you a
-                finished paper.
-              </p>
-
-              <div className="cta">
-                <a className="btn btn-solid" href="#install">
-                  Get started
-                </a>
-                <a
-                  className="btn btn-ghost"
-                  href={REPO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View on GitHub
+              <div className="hero-actions">
+                <div className="hero-cmd">
+                  <span>{INSTALL_CMDS.pip}</span>
+                  <button
+                    className={`icon-btn${copiedHero ? ' copied' : ''}`}
+                    type="button"
+                    aria-label={copiedHero ? 'Copied' : 'Copy pip install command'}
+                    onClick={() =>
+                      copyText(INSTALL_CMDS.pip, () => {
+                        setCopiedHero(true);
+                        setTimeout(() => setCopiedHero(false), 1400);
+                      })
+                    }
+                  >
+                    {copiedHero ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                  </button>
+                </div>
+                <a className="btn btn-outline" href="#pipeline">
+                  How it works
                 </a>
               </div>
             </div>
 
-            <TerminalCard theme={theme} />
-          </div>
-
-          <div className="tags" aria-label="Works with">
-            <LogoLoop
-              logos={tagLogos}
-              speed={52}
-              gap={12}
-              logoHeight={34}
-              pauseOnHover
-              fadeOut
-              fadeOutWidth={0.12}
-              draggable
-              ariaLabel="Supported tools and model providers"
-            />
+            <div className="workbench-wrap">
+              <TerminalCard theme={theme} />
+            </div>
           </div>
         </section>
 
-        <section className="wrap section" id="how">
-          <h2>How it works</h2>
+        <div className="ecosystem" aria-label="Works with">
+          <LogoLoop
+            logos={tagLogos}
+            speed={46}
+            gap={10}
+            logoHeight={30}
+            pauseOnHover
+            fadeOut
+            fadeOutWidth={0.1}
+            draggable
+            ariaLabel="Supported tools and model providers"
+          />
+        </div>
+
+        <section className="wrap section" id="pipeline">
+          <p className="section-kicker">Architecture</p>
+          <h2>Four agents, one verified loop.</h2>
           <p className="section-sub">
-            One command runs the whole loop. Every number in the paper comes from code that
-            actually ran.
+            No fabricated citations or hallucinated benchmarks. Each stage hands structured
+            artifacts to the next.
           </p>
 
           <MagicBento
             className="steps-bento"
-            items={stepsItems}
-            columns={4}
-            rowHeight={215}
-            gap={12}
-            radius={20}
+            items={pipelineItems}
+            columns={2}
+            rowHeight={185}
+            gap={14}
+            radius={14}
             theme={theme}
             glowColor={theme === 'dark' ? '#ffffff' : '#0a0a0a'}
             textAutoHide={false}
             enableSpotlight
             enableBorderGlow
-            enableTilt
+            enableTilt={false}
             clickEffect
             style={BENTO_THEME_STYLES[theme]}
           />
         </section>
 
-        <section className="wrap section install-section" id="install">
-          <h2>Install</h2>
+        <section className="wrap section" id="install">
+          <p className="section-kicker">Quickstart</p>
+          <h2>Run it locally in a minute.</h2>
           <p className="section-sub">
-            Python 3.10 or newer. Works with any model provider, or offline with Ollama.
+            Requires Python 3.10+. Bring any cloud model via LiteLLM, or run completely offline with
+            Ollama.
           </p>
 
-          <div className="install-surface">
-            <div className="install-dots" aria-hidden="true">
-              <DotGrid
-                dotSize={3.5}
-                gap={22}
-                baseColor={theme === 'dark' ? '#2c2c2c' : '#d4d4d4'}
-                activeColor={theme === 'dark' ? '#ffffff' : '#0a0a0a'}
-                proximity={120}
-                strength={0.65}
-                opacity={theme === 'dark' ? 0.55 : 0.45}
-                mouseInteraction
-                clickShock={false}
-              />
-            </div>
-
-            <div className="install-inner">
+          <div className="install-grid">
+            <div className="install-panel">
               <div className="seg" role="tablist" aria-label="Install method">
                 {Object.keys(INSTALL_CMDS).map(tab => (
                   <button
@@ -458,7 +390,7 @@ export default function App() {
                     className={`seg-btn${installTab === tab ? ' active' : ''}`}
                     onClick={() => {
                       setInstallTab(tab);
-                      setCopied(false);
+                      setCopiedInstall(false);
                     }}
                   >
                     {tab}
@@ -469,23 +401,36 @@ export default function App() {
               <SpotlightCard
                 className="code-card"
                 theme={theme}
-                intensity={theme === 'dark' ? 0.12 : 0.08}
-                borderGlow={0.5}
+                intensity={theme === 'dark' ? 0.1 : 0.06}
+                borderGlow={0.4}
                 spotlightSize={220}
               >
                 <div className="code-row">
                   <code>{INSTALL_CMDS[installTab]}</code>
                   <button
-                    className={`icon-btn${copied ? ' copied' : ''}`}
+                    className={`icon-btn${copiedInstall ? ' copied' : ''}`}
                     type="button"
-                    onClick={handleCopy}
-                    aria-label={copied ? 'Copied' : 'Copy install command'}
+                    aria-label={copiedInstall ? 'Copied' : 'Copy install command'}
+                    onClick={() =>
+                      copyText(INSTALL_CMDS[installTab], () => {
+                        setCopiedInstall(true);
+                        setTimeout(() => setCopiedInstall(false), 1400);
+                      })
+                    }
                   >
-                    {copied ? <CheckIcon /> : <CopyIcon />}
+                    {copiedInstall ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
                   </button>
                 </div>
               </SpotlightCard>
 
+              <p className="install-note">
+                Configure your provider key in <code>.env</code> or point <code>OLLAMA_BASE_URL</code>{' '}
+                to a local model, then launch <code>xavier</code>.
+              </p>
+            </div>
+
+            <div className="cmd-panel">
+              <div className="cmd-panel-head">CLI Commands</div>
               <div className="cmd-list">
                 {CLI_COMMANDS.map(([cmd, desc]) => (
                   <div key={cmd}>
@@ -499,34 +444,19 @@ export default function App() {
         </section>
 
         <footer className="wrap footer">
-          <a
-            className="footer-brand"
-            href="https://adrianfolio.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a className="footer-brand" href="#top">
             <Mark id="footer-mark-m" />
-            XavierLabs
+            XavierLabs AI
           </a>
           <span>Built by Adrian Xavier Moral</span>
-          <span className="footer-right">MIT License</span>
+          <div className="footer-links">
+            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+            <span>MIT License</span>
+          </div>
         </footer>
       </main>
-
-      <Dock
-        className="floating-dock"
-        items={dockItems}
-        position="bottom"
-        theme={theme}
-        baseItemSize={42}
-        magnification={58}
-        distance={140}
-        panelHeight={56}
-        gap={6}
-        roundness={0.55}
-        accentColor={theme === 'dark' ? '#f5f5f5' : '#0a0a0a'}
-        style={DOCK_THEME_STYLES[theme]}
-      />
     </>
   );
 }

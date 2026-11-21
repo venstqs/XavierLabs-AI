@@ -1,19 +1,22 @@
 import sys
-import os
-import json
 import time
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 
-from xavierlabs.sandbox.base import SandboxBase, ExecutionResult
+from xavierlabs.sandbox.base import SandboxBase, ExecutionResult, scrubbed_env
 from xavierlabs.config import settings
 
 
 class LocalSandbox(SandboxBase):
     """
-    Subprocess sandbox that runs Python code in an isolated process
-    with working directory containment and strict timeout enforcement.
+    Subprocess sandbox that runs Python code in a separate process with
+    working directory containment, a scrubbed environment (no API keys),
+    and strict timeout enforcement.
+
+    Note: this is process isolation only. Generated code can still read and
+    write files the current user can access. Use the Docker sandbox for
+    stronger isolation.
     """
 
     def __init__(self, python_executable: Optional[str] = None):
@@ -27,27 +30,34 @@ class LocalSandbox(SandboxBase):
         script_path: Path,
         workspace_dir: Path,
         timeout: Optional[int] = None,
+        clear_metrics: bool = True,
     ) -> ExecutionResult:
         timeout = timeout or settings.EXECUTION_TIMEOUT
         workspace_dir = Path(workspace_dir).resolve()
         script_path = Path(script_path).resolve()
 
-        start_time = time.time()
-        metrics: Dict[str, Any] = {}
+        if clear_metrics:
+            self._clear_metrics(workspace_dir)
+
         error_traceback: Optional[str] = None
 
-        env = os.environ.copy()
+        env = scrubbed_env()
         # Set unbuffered output so stdout/stderr can be captured reliably
         env["PYTHONUNBUFFERED"] = "1"
         env["PYTHONPATH"] = str(workspace_dir)
+        # Headless plotting backend so matplotlib never tries to open a window
+        env["MPLBACKEND"] = "Agg"
 
+        start_time = time.time()
         try:
             process = subprocess.run(
-                [self.python_executable, str(script_path.name)],
+                [self.python_executable, str(script_path)],
                 cwd=str(workspace_dir),
                 env=env,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=timeout,
             )
             execution_time = time.time() - start_time
@@ -61,7 +71,8 @@ class LocalSandbox(SandboxBase):
 
         except subprocess.TimeoutExpired as e:
             execution_time = time.time() - start_time
-            stdout = e.stdout or ""
+            partial = e.stdout or ""
+            stdout = partial.decode("utf-8", errors="replace") if isinstance(partial, bytes) else partial
             stderr = f"Execution timed out after {timeout} seconds."
             returncode = -1
             success = False
@@ -75,21 +86,13 @@ class LocalSandbox(SandboxBase):
             success = False
             error_traceback = stderr
 
-        # Try to read generated metrics.json
-        metrics_file = workspace_dir / "metrics.json"
-        if metrics_file.exists():
-            try:
-                metrics = json.loads(metrics_file.read_text(encoding="utf-8"))
-            except Exception:
-                pass
-
         return ExecutionResult(
             returncode=returncode,
             stdout=stdout,
             stderr=stderr,
             execution_time=execution_time,
             success=success,
-            metrics=metrics,
+            metrics=self._read_metrics(workspace_dir),
             error_traceback=error_traceback,
             sandbox_type="local_subprocess",
         )

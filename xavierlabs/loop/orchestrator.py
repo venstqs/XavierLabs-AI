@@ -1,8 +1,9 @@
+import json
 import re
 import shutil
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
@@ -15,7 +16,9 @@ from xavierlabs.agents.reviewer import ReviewerAgent, HypothesisReview, CodeAudi
 from xavierlabs.agents.coder import CoderAgent
 from xavierlabs.agents.synthesizer import SynthesizerAgent
 from xavierlabs.sandbox.manager import get_sandbox
-from xavierlabs.sandbox.base import ExecutionResult
+from xavierlabs.sandbox.base import ExecutionResult, METRICS_FILENAME
+from xavierlabs.sandbox.docker_sandbox import DockerSandbox
+from xavierlabs.sandbox.local_sandbox import LocalSandbox
 from xavierlabs.tools.files import WorkspaceInspector
 from xavierlabs.ui.terminal import ui
 
@@ -36,7 +39,7 @@ class ResearchOrchestrator:
     def _slugify(self, text: str) -> str:
         slug = re.sub(r"[^\w\s-]", "", text.lower())
         slug = re.sub(r"[\s_-]+", "-", slug).strip("-")[:40]
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         return f"{slug}_{timestamp}"
 
     def run_research(
@@ -45,7 +48,7 @@ class ResearchOrchestrator:
         starting_code_dir: Optional[Path] = None,
         max_debug_retries: Optional[int] = None,
     ) -> Dict[str, Any]:
-        retries = max_debug_retries or settings.MAX_DEBUG_RETRIES
+        retries = settings.MAX_DEBUG_RETRIES if max_debug_retries is None else max(0, max_debug_retries)
         slug = self._slugify(topic)
         workspace = settings.WORKSPACE_DIR / slug
         workspace.mkdir(parents=True, exist_ok=True)
@@ -56,6 +59,13 @@ class ResearchOrchestrator:
 
         sandbox, sandbox_desc = get_sandbox()
         ui.console.print(f"[bold green]Execution Sandbox:[/bold green] {sandbox_desc}\n")
+        if isinstance(sandbox, DockerSandbox):
+            try:
+                with ui.console.status("[cyan]Preparing Docker sandbox image (first run builds it, ~1-2 min)...[/cyan]"):
+                    sandbox.ensure_image()
+            except Exception as e:
+                ui.console.print(f"[yellow]Docker image unavailable ({e}). Falling back to local subprocess sandbox.[/yellow]\n")
+                sandbox = LocalSandbox()
 
         with Session(engine) as db_session:
             exp = Experiment(slug=slug, topic=topic, status="ideating")
@@ -120,8 +130,8 @@ class ResearchOrchestrator:
                 title=hypothesis.title,
                 motivation=hypothesis.motivation,
                 theoretical_basis=hypothesis.theoretical_basis,
-                parameters_json=str(hypothesis.parameters),
-                metrics_json=str(hypothesis.metrics),
+                parameters_json=json.dumps(hypothesis.parameters, default=str),
+                metrics_json=json.dumps(hypothesis.metrics, default=str),
                 is_approved=review.approved,
                 review_score=review.overall_score,
                 review_feedback=review.modifications_required,
@@ -171,6 +181,16 @@ class ResearchOrchestrator:
                 with ui.console.status(f"[bold green]Running experiment.py (Attempt {attempt})...[/bold green]"):
                     result = sandbox.run_script(script_file, workspace)
 
+                # A clean exit without metrics.json is still a failed experiment:
+                # synthesis would otherwise run on empty data.
+                if result.success and not result.metrics:
+                    result.success = False
+                    result.error_traceback = (
+                        f"The script exited with code 0 but did not write '{METRICS_FILENAME}' "
+                        "(or wrote an empty/invalid JSON object). It must save a JSON dictionary "
+                        f"of all final numerical metrics to '{METRICS_FILENAME}' in the current working directory."
+                    )
+
                 ui.print_execution_telemetry(result, attempt)
 
                 # Record run in DB
@@ -182,7 +202,7 @@ class ResearchOrchestrator:
                     stdout=result.stdout,
                     stderr=result.stderr,
                     execution_time=result.execution_time,
-                    metrics_json=str(result.metrics),
+                    metrics_json=json.dumps(result.metrics, default=str),
                     success=result.success,
                 )
                 db_session.add(run_rec)
@@ -234,11 +254,14 @@ class ResearchOrchestrator:
                 plot_file.write_text(plot_code, encoding="utf-8")
 
             with ui.console.status("[magenta]Executing plot.py to render publication figure...[/magenta]"):
-                plot_run = sandbox.run_script(plot_file, workspace)
+                plot_run = sandbox.run_script(plot_file, workspace, clear_metrics=False)
 
             plot_png = workspace / "plot.png"
             if plot_png.exists():
                 ui.console.print("[green]✔ Rendered plot.png successfully![/green]")
+            else:
+                ui.console.print(f"[yellow]plot.py did not produce plot.png (continuing without figure): "
+                                 f"{(plot_run.error_traceback or plot_run.stderr or '').strip()[-300:]}[/yellow]")
 
             # 2. LaTeX Manuscript (paper.tex)
             with ui.console.status("[magenta]Drafting formal academic manuscript (paper.tex)...[/magenta]"):
@@ -293,7 +316,7 @@ class ResearchOrchestrator:
             # Store artifacts in DB
             artifacts_dict = {
                 "Executable Script": str(script_file.resolve()),
-                "Recorded Metrics": str((workspace / "metrics.json").resolve()),
+                "Recorded Metrics": str((workspace / METRICS_FILENAME).resolve()),
                 "Visualization Code": str(plot_file.resolve()),
                 "Publication Figure": str(plot_png.resolve()) if plot_png.exists() else "N/A",
                 "LaTeX Manuscript": str(latex_file.resolve()),

@@ -30,7 +30,7 @@ def test_db_initialization_and_crud():
         session.commit()
 
         # Query back
-        stmt = select(Experiment).where(Experiment.slug == "test-exp-001")
+        stmt = select(Experiment).where(Experiment.slug == slug)
         retrieved = session.exec(stmt).first()
         assert retrieved is not None
         assert len(retrieved.hypotheses) == 1

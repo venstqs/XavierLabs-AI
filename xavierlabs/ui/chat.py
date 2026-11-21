@@ -171,9 +171,15 @@ class ChatSession:
         ui.console.print(f"\n[bold #9ec97b]▶ Launching Autonomous Research Swarm for:[/] [white]{topic}[/]\n")
         self.active_topic = topic
         try:
-            exp_dir = self.orchestrator.run_research(topic=topic)
+            outcome = self.orchestrator.run_research(topic=topic)
+            exp_dir = outcome["workspace"]
+
+            if outcome.get("status") != "completed":
+                ui.console.print(f"\n[bold yellow]Research run did not complete.[/bold yellow] Partial files are in [cyan]{exp_dir}[/cyan]\n")
+                return
+
             ui.console.print(f"\n[bold green]✔ Research run complete![/bold green] Artifacts saved in [cyan]{exp_dir}[/cyan]\n")
-            
+
             # Offer to view paper
             if Confirm.ask("Open compiled research paper in viewer now?", default=True):
                 from xavierlabs.cli import build_paper
@@ -247,12 +253,12 @@ class ChatSession:
 
                 ui.console.print("\n[bold cyan]Recent Experiments:[/bold cyan]")
                 for idx, exp in enumerate(experiments, 1):
-                    ui.console.print(f"  [{idx}] [bold]{exp.topic}[/bold] [dim]({exp.workspace_path})[/dim]")
+                    ui.console.print(f"  [{idx}] [bold]{exp.topic}[/bold] [dim]({settings.WORKSPACE_DIR / exp.slug})[/dim]")
 
                 choice = Prompt.ask("\nEnter number to inspect paper (or Enter to cancel)").strip()
                 if choice.isdigit() and 1 <= int(choice) <= len(experiments):
                     selected = experiments[int(choice) - 1]
-                    build_paper(experiment_dir=Path(selected.workspace_path), open_viewer=True)
+                    build_paper(experiment_dir=settings.WORKSPACE_DIR / selected.slug, open_viewer=True)
                 return
 
         build_paper(experiment_dir=Path(folder), open_viewer=True)

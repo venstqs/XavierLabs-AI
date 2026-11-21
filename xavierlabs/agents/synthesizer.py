@@ -1,7 +1,11 @@
+import html
+import os
 import re
 import json
+import shutil
+import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from xavierlabs.agents.base import BaseAgent
 from xavierlabs.agents.ideator import HypothesisConfig
 from xavierlabs.tools.academic import AcademicPaper
@@ -144,7 +148,9 @@ Requirements:
             max_tokens=4096,
         )
 
-        return response.strip()
+        text = response.strip()
+        fenced = re.fullmatch(r"```(?:markdown|md)?[ \t]*\n([\s\S]*?)\n?```", text)
+        return fenced.group(1).strip() if fenced else text
 
     def generate_html_paper(
         self,
@@ -154,15 +160,31 @@ Requirements:
         markdown_body: str,
     ) -> str:
         """Generates a publication-grade standalone HTML paper with MathJax and academic CSS."""
-        lit_items = "".join([f"<li><strong>{p.title}</strong> ({p.year or 'N/A'}) - <em>{', '.join(p.authors[:3])}</em>. <a href='{p.url}' target='_blank'>[Link]</a></li>" for p in literature])
-        
-        metrics_rows = "".join([f"<tr><td><code>{k}</code></td><td><strong>{v}</strong></td></tr>" for k, v in metrics.items()])
+        esc = html.escape
+        lit_items = "".join(
+            f"<li><strong>{esc(p.title)}</strong> ({p.year or 'N/A'}) - <em>{esc(', '.join(p.authors[:3]))}</em>. "
+            f"<a href=\"{esc(p.url, quote=True)}\" target=\"_blank\" rel=\"noopener\">[Link]</a></li>"
+            for p in literature
+        )
 
-        html = f"""<!DOCTYPE html>
+        def fmt_value(v: Any) -> str:
+            text = json.dumps(v, default=str) if isinstance(v, (dict, list)) else str(v)
+            return esc(text if len(text) <= 300 else text[:300] + "...")
+
+        metrics_rows = "".join(
+            f"<tr><td><code>{esc(str(k))}</code></td><td><strong>{fmt_value(v)}</strong></td></tr>"
+            for k, v in metrics.items()
+        )
+        title = esc(hypothesis.title)
+        motivation = esc(hypothesis.motivation)
+        theory = esc(hypothesis.theoretical_basis)
+        design = esc(hypothesis.experimental_design)
+
+        html_doc = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>{hypothesis.title}</title>
+<title>{title}</title>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
     @page {{ size: A4; margin: 20mm; }}
@@ -249,7 +271,7 @@ Requirements:
 </head>
 <body>
 
-<h1 class="title">{hypothesis.title}</h1>
+<h1 class="title">{title}</h1>
 <div class="authors">
     <strong>XavierLabs AI Computational Research Swarm</strong><br>
     Autonomous Terminal-Native Scientific Research Engine
@@ -257,15 +279,15 @@ Requirements:
 
 <div class="abstract-box">
     <div class="abstract-title">Abstract</div>
-    <p>{hypothesis.motivation} In this paper, we computationally investigate this hypothesis through empirical simulations and rigorous telemetry analysis. Our results quantify convergence dynamics and parameter sensitivity across standardized benchmarks.</p>
+    <p>{motivation} In this paper, we computationally investigate this hypothesis through empirical simulations and rigorous telemetry analysis. Our results quantify convergence dynamics and parameter sensitivity across standardized benchmarks.</p>
 </div>
 
 <h2>1. Introduction & Theoretical Motivation</h2>
-<p>{hypothesis.motivation}</p>
-<p><strong>Theoretical Formulation:</strong> {hypothesis.theoretical_basis}</p>
+<p>{motivation}</p>
+<p><strong>Theoretical Formulation:</strong> {theory}</p>
 
 <h2>2. Experimental Methodology</h2>
-<p>{hypothesis.experimental_design}</p>
+<p>{design}</p>
 
 <h2>3. Quantitative Findings & Metrics</h2>
 <table>
@@ -290,51 +312,58 @@ Requirements:
 </body>
 </html>
 """
-        return html
+        return html_doc
+
+    @staticmethod
+    def _find_headless_browser() -> Optional[str]:
+        """Locates a Chromium-based browser (Edge, Chrome, Chromium) for HTML-to-PDF printing."""
+        candidates = [
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        ]
+        for path in candidates:
+            if os.path.exists(path):
+                return path
+        for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge", "msedge", "chrome"):
+            found = shutil.which(name)
+            if found:
+                return found
+        return None
 
     def compile_pdf(self, html_path: Path, output_pdf_path: Path) -> bool:
         """
-        Compiles HTML paper to a publication-grade PDF using headless Microsoft Edge or Chrome.
+        Compiles the HTML paper to PDF using a headless Chromium-based browser (Edge, Chrome or Chromium).
         """
-        import subprocess
-        import os
-        
-        edge_paths = [
-            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        ]
-        
-        edge_bin = None
-        for p in edge_paths:
-            if os.path.exists(p):
-                edge_bin = p
-                break
-                
-        if not edge_bin:
+        browser = self._find_headless_browser()
+        if not browser:
             return False
 
         try:
             cmd = [
-                edge_bin,
+                browser,
                 "--headless=new",
                 "--disable-gpu",
                 "--no-pdf-header-footer",
+                "--virtual-time-budget=10000",  # let MathJax finish rendering before printing
                 f"--print-to-pdf={output_pdf_path.resolve()}",
-                str(html_path.resolve()),
+                html_path.resolve().as_uri(),
             ]
-            res = subprocess.run(cmd, capture_output=True, timeout=30)
+            subprocess.run(cmd, capture_output=True, timeout=60)
             return output_pdf_path.exists()
         except Exception:
             return False
 
     def _extract_code(self, text: str, lang: str = "python") -> str:
-        pattern = rf"```{lang}?\s*([\s\S]*?)\s*```"
-        match = re.search(pattern, text)
+        # Prefer a block tagged with the requested language, then any fenced block.
+        match = re.search(rf"```{re.escape(lang)}[^\n]*\n([\s\S]*?)```", text, re.IGNORECASE)
+        if not match:
+            match = re.search(r"```[^\n]*\n([\s\S]*?)```", text)
         if match:
             return match.group(1).strip()
-        # Fallback to any code block
-        match_any = re.search(r"```\s*([\s\S]*?)\s*```", text)
-        if match_any:
-            return match_any.group(1).strip()
         return text.strip()
 

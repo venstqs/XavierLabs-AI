@@ -65,7 +65,11 @@ class Settings(BaseSettings):
 
     # Execution Sandbox Settings
     SANDBOX_MODE: Literal["auto", "docker", "local"] = "auto"
-    DOCKER_IMAGE: str = "python:3.11-slim"
+    # Default image is built automatically on first use (python:3.11-slim + numpy/scipy/matplotlib/...)
+    DOCKER_IMAGE: str = "xavierlabs-sandbox:latest"
+    DOCKER_NETWORK: str = "none"  # "none" = no network access for generated code; use "bridge" to allow it
+    DOCKER_MEM_LIMIT: str = "2g"
+    DOCKER_CPUS: float = 2.0
     EXECUTION_TIMEOUT: int = 180  # seconds
     EXPERIMENT_TIMEOUT_SECONDS: int = 180
     MAX_DEBUG_RETRIES: int = 3

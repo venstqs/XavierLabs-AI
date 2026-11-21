@@ -116,7 +116,10 @@ Analyze the error, locate the bug, and provide the complete fixed Python script.
 
     def _extract_python_code(self, text: str) -> str:
         """Extracts Python code from markdown fences if present."""
-        code_match = re.search(r"```(?:python)?\s*([\s\S]*?)\s*```", text)
+        # Prefer a ```python / ```py block; fall back to the first fenced block of any language.
+        code_match = re.search(r"```(?:python3?|py)[^\n]*\n([\s\S]*?)```", text, re.IGNORECASE)
+        if not code_match:
+            code_match = re.search(r"```[^\n]*\n([\s\S]*?)```", text)
         if code_match:
             return code_match.group(1).strip()
         return text.strip()

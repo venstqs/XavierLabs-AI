@@ -1,7 +1,24 @@
+import json
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Any, Optional
+
+
+METRICS_FILENAME = "metrics.json"
+
+# Environment variables that must never be exposed to LLM-generated code.
+_SENSITIVE_ENV_MARKERS = ("API_KEY", "API_BASE", "TOKEN", "SECRET", "PASSWORD", "CREDENTIAL")
+
+
+def scrubbed_env() -> Dict[str, str]:
+    """Returns a copy of os.environ with API keys and other secrets removed."""
+    return {
+        k: v
+        for k, v in os.environ.items()
+        if not any(marker in k.upper() for marker in _SENSITIVE_ENV_MARKERS)
+    }
 
 
 @dataclass
@@ -34,6 +51,30 @@ class SandboxBase(ABC):
         script_path: Path,
         workspace_dir: Path,
         timeout: Optional[int] = None,
+        clear_metrics: bool = True,
     ) -> ExecutionResult:
-        """Runs the given Python script within the sandboxed environment."""
+        """
+        Runs the given Python script within the sandboxed environment.
+        If clear_metrics is True, any existing metrics.json is removed first so that
+        only metrics written by this run are reported.
+        """
         pass
+
+    @staticmethod
+    def _clear_metrics(workspace_dir: Path) -> None:
+        """Removes metrics left by a previous run so stale results are never reported."""
+        try:
+            (workspace_dir / METRICS_FILENAME).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    @staticmethod
+    def _read_metrics(workspace_dir: Path) -> Dict[str, Any]:
+        metrics_file = workspace_dir / METRICS_FILENAME
+        if metrics_file.exists():
+            try:
+                data = json.loads(metrics_file.read_text(encoding="utf-8"))
+                return data if isinstance(data, dict) else {"result": data}
+            except Exception:
+                pass
+        return {}

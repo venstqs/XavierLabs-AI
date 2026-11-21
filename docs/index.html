@@ -3,184 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XavierLabs: Autonomous Research from Question to Paper</title>
-  <meta name="description" content="An open-source research swarm for your terminal. It reads the literature, runs real experiments in a sandbox, and writes the paper.">
+  <title>XavierLabs AI</title>
+  <meta name="description" content="An open-source research agent for your terminal. It reads the literature, runs real experiments in a sandbox, fixes its own bugs, and writes the paper.">
   <meta name="author" content="Adrian Xavier Moral">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 
   <script>
-    try { var t = localStorage.getItem('theme'); if (t !== 'light' && t !== 'dark') t = 'light'; document.documentElement.dataset.theme = t; } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    try { var t = localStorage.getItem('theme'); if (t !== 'light' && t !== 'dark') t = 'dark'; document.documentElement.dataset.theme = t; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
   </script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/cmu-serif.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/cmu-typewriter-text.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <nav class="topbar" aria-label="Site">
-    <a class="mark" href="#">xavierlabs</a>
-    <span class="topbar-links">
-      <a href="https://github.com/venstqs/XavierLabs-AI#readme" target="_blank" rel="noopener">Docs</a>
-      <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener">GitHub</a>
-      <button type="button" id="themeToggle">Dark</button>
-    </span>
-  </nav>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 40 40">
+      <rect width="40" height="40" rx="10" fill="currentColor"/>
+      <g transform="translate(7 7) scale(.65)">
+        <mask id="mark-m"><rect width="40" height="40" fill="#fff"/><polygon points="2.4,36 11.6,36 31.41,4 22.21,4" fill="#000"/></mask>
+        <g transform="translate(6.33 0) skewX(-10)" style="fill: var(--bg)">
+          <polygon points="30.0,36 36.0,36 16.19,4 10.19,4" mask="url(#mark-m)"/>
+          <polygon points="4.0,36 10.0,36 29.81,4 23.81,4"/>
+          <rect x="12.076" y="25.8" width="15.848" height="4.0"/>
+        </g>
+      </g>
+    </symbol>
+    <symbol id="gh" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12.02c0 4.43 2.87 8.18 6.84 9.5.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03A9.56 9.56 0 0 1 12 6.84c.85 0 1.7.12 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.86l-.01 2.75c0 .27.18.58.69.48A10.02 10.02 0 0 0 22 12.02C22 6.48 17.52 2 12 2Z"/></symbol>
+    <symbol id="sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+    <symbol id="moon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M20.5 14.1A8.5 8.5 0 0 1 9.9 3.5a8.5 8.5 0 1 0 10.6 10.6Z"/></symbol>
+    <symbol id="copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></g></symbol>
+  </svg>
 
-  <main class="paper">
-
-    <header class="title-block">
-      <h1>Autonomous Research, from Question to Paper</h1>
-      <p class="authors">The XavierLabs Research Swarm<sup>1</sup> &nbsp; Adrian Xavier Moral<sup>2</sup></p>
-      <p class="affil"><sup>1</sup>Ideator, Reviewer, Coder and Synthesizer agents &nbsp; <sup>2</sup><a href="https://adrianfolio.vercel.app/" target="_blank" rel="noopener">XavierLabs</a></p>
-      <p class="affil">Open source under the MIT License</p>
-    </header>
-
-    <section class="abstract" aria-labelledby="abs">
-      <h2 id="abs">Abstract</h2>
-      <p>
-        XavierLabs is a command-line tool that carries a research question all the way to a written paper.
-        It searches the literature, proposes a hypothesis that can be tested, and has it reviewed before any code exists.
-        It then writes a Python experiment, runs it in a sandbox, and repairs it from the traceback when it crashes.
-        Every number in the final paper comes from code that actually ran, and you can open, rerun and audit that code.
-      </p>
-    </section>
-
-    <figure class="listing">
-      <div class="listing-head">
-        <span class="tabs" role="tablist" aria-label="Install method">
-          <button type="button" class="tab active" data-tab="pip">pip</button>
-          <button type="button" class="tab" data-tab="uv">uv</button>
-          <button type="button" class="tab" data-tab="git">git</button>
-        </span>
-        <button type="button" class="copy" id="copyBtn">Copy</button>
+  <div class="navwrap">
+    <nav class="wrap nav" aria-label="Main">
+      <a class="logo" href="#top"><svg class="logo-mark"><use href="#mark"/></svg><span>XavierLabs</span></a>
+      <div class="pill-nav">
+        <a href="#about" class="active">About</a>
+        <a href="#how">How it works</a>
+        <a href="#install">Install</a>
       </div>
-      <pre><code id="installCmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</code></pre>
-      <figcaption><b>Listing 1.</b> Installation. Requires Python 3.10 or newer; Docker is optional.</figcaption>
-    </figure>
+      <div class="nav-right">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <svg class="i-sun"><use href="#sun"/></svg><svg class="i-moon"><use href="#moon"/></svg>
+        </button>
+        <a class="btn btn-solid btn-sm" href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener"><svg><use href="#gh"/></svg>GitHub</a>
+      </div>
+    </nav>
+  </div>
 
-    <section>
-      <h2><span class="num">1</span>Introduction</h2>
-      <p>
-        Computational research follows the same loop every time: read what is known, form a hypothesis, write a simulation,
-        debug it, plot the results, and typeset the findings. Each step is slow, and the gap between a claim and the code
-        behind it is where errors hide.
-      </p>
-      <p>
-        XavierLabs automates the loop and keeps that gap closed. You give it a question in plain language; it returns a folder
-        containing the experiment, its recorded metrics, a figure, and the paper in PDF, HTML, LaTeX and Markdown.
-      </p>
+  <main id="top">
+    <section class="hero" id="about">
+      <canvas class="waves" id="waves" aria-hidden="true"></canvas>
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="status"><span class="dot"></span>Open source research agent</p>
+          <h1>Research on autopilot.</h1>
+          <p class="rotator">It <span class="word-pill" id="wordPill" aria-live="polite">reads the literature</span></p>
+          <p class="intro">
+            Give XavierLabs a question. A team of four AI agents finds the papers, tests a hypothesis with real code in a sandbox,
+            fixes its own crashes, and hands you a finished paper.
+          </p>
+          <div class="cta">
+            <a class="btn btn-solid" href="#install">Get started</a>
+            <a class="btn btn-ghost" href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+        </div>
+
+        <div class="term-card">
+          <div class="term-top"><span></span><span></span><span></span><em>xavier research</em></div>
+          <pre class="term-body" id="term"></pre>
+        </div>
+      </div>
+
+      <div class="tags" aria-label="Works with">
+        <div class="tags-track" id="tags"></div>
+      </div>
     </section>
 
-    <section>
-      <h2><span class="num">2</span>Method</h2>
-      <p>
-        Four agents work in sequence, as shown in Figure&nbsp;1. The <i>Ideator</i> searches ArXiv and Semantic Scholar and
-        drafts a hypothesis. The <i>Reviewer</i> scores it for novelty, rigor and feasibility, and sends weak ideas back for
-        revision; if one is still rejected, the run stops before any code is written. The <i>Coder</i> writes a seeded,
-        self-contained experiment, which runs in an offline Docker container or a restricted subprocess. A failed run
-        returns its traceback to the Coder, which patches the script and tries again. The <i>Synthesizer</i> turns the
-        recorded metrics into a figure and a paper.
-      </p>
-
-      <figure class="fig">
-        <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Pipeline: Ideator, Reviewer, Coder, Sandbox, Synthesizer, with a traceback loop from Sandbox back to Coder">
-          <defs>
-            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0,1 L9,5 L0,9" fill="none" stroke="currentColor" stroke-width="1.4"/>
-            </marker>
-          </defs>
-          <g fill="none" stroke="currentColor" stroke-width="1.1">
-            <rect x="6" y="60" width="104" height="44"/>
-            <rect x="138" y="60" width="104" height="44"/>
-            <rect x="270" y="60" width="104" height="44"/>
-            <rect x="402" y="60" width="104" height="44"/>
-            <rect x="530" y="60" width="104" height="44"/>
-            <path d="M110 82 H136" marker-end="url(#arrow)"/>
-            <path d="M242 82 H268" marker-end="url(#arrow)"/>
-            <path d="M374 82 H400" marker-end="url(#arrow)"/>
-            <path d="M506 82 H528" marker-end="url(#arrow)"/>
-            <path d="M454 104 V136 H322 V106" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
-            <path d="M190 60 V30 H58 V58" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
-          </g>
-          <g class="diagram-text" text-anchor="middle">
-            <text x="58" y="87">Ideator</text>
-            <text x="190" y="87">Reviewer</text>
-            <text x="322" y="87">Coder</text>
-            <text x="454" y="87">Sandbox</text>
-            <text x="582" y="87">Synthesizer</text>
-            <text x="388" y="154" class="small">traceback, retry</text>
-            <text x="124" y="22" class="small">revise if rejected</text>
-          </g>
-        </svg>
-        <figcaption><b>Figure 1.</b> The research loop. Dashed arrows are feedback: rejected hypotheses go back to the Ideator, and failed runs go back to the Coder.</figcaption>
-      </figure>
-    </section>
-
-    <section>
-      <h2><span class="num">3</span>Example run</h2>
-      <p>
-        Figure&nbsp;2 and Table&nbsp;1 show what a run produces. The command below asked whether the Lion optimizer reaches
-        a lower loss than AdamW on a non-convex surface. The first experiment crashed on a shape mismatch, the Coder fixed it,
-        and the second run recorded the metrics plotted here.
-      </p>
-      <pre class="inline-cmd"><code>xavier research "AdamW vs Lion on non-convex loss surfaces"</code></pre>
-
-      <figure class="fig">
-        <svg class="plot" id="plot" viewBox="0 0 560 300" role="img" aria-label="Line chart of training loss over 2000 steps; Lion ends below AdamW"></svg>
-        <figcaption><b>Figure 2.</b> Training loss on the Rastrigin function, rendered by the generated <code>plot.py</code>. Illustrative output of the run above.</figcaption>
-      </figure>
-
-      <figure class="fig">
-        <figcaption class="above"><b>Table 1.</b> Metrics recorded in <code>metrics.json</code>.</figcaption>
-        <table class="booktabs">
-          <thead><tr><th>Optimizer</th><th class="r">Final loss</th><th class="r">Steps to 0.01</th></tr></thead>
-          <tbody>
-            <tr><td>AdamW</td><td class="r">0.00342</td><td class="r">1,840</td></tr>
-            <tr><td>Lion</td><td class="r"><b>0.00189</b></td><td class="r"><b>1,244</b></td></tr>
-          </tbody>
-        </table>
-      </figure>
-    </section>
-
-    <section>
-      <h2><span class="num">4</span>Usage</h2>
-      <p>Run <code>xavier</code> with no arguments for an interactive console, or call a command directly (Table&nbsp;2).</p>
-      <figure class="fig">
-        <figcaption class="above"><b>Table 2.</b> Commands.</figcaption>
-        <table class="booktabs cmds">
-          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
-          <tbody>
-            <tr><td><code>xavier research "&lt;topic&gt;"</code></td><td>Runs the full loop and writes the paper</td></tr>
-            <tr><td><code>xavier paper &lt;folder&gt; --open</code></td><td>Opens the PDF, HTML, LaTeX or Markdown of a run</td></tr>
-            <tr><td><code>xavier history</code></td><td>Lists past experiments and their status</td></tr>
-            <tr><td><code>xavier auth</code></td><td>Adds a model provider key and tests it</td></tr>
-            <tr><td><code>xavier config</code></td><td>Shows the active model, keys and sandbox</td></tr>
-          </tbody>
-        </table>
-      </figure>
-    </section>
-
-    <section>
-      <h2><span class="num">5</span>Models</h2>
-      <p>
-        Any provider supported by LiteLLM works, including Groq, DeepSeek, OpenRouter, OpenAI, Anthropic and Gemini.
-        To keep everything on your machine, point it at a local Ollama model; no API key is needed.
-      </p>
-    </section>
-
-    <section class="refs">
-      <h2>References</h2>
-      <ol>
-        <li>ArXiv, open-access preprint archive. <a href="https://arxiv.org" target="_blank" rel="noopener">arxiv.org</a></li>
-        <li>Semantic Scholar Academic Graph API. <a href="https://www.semanticscholar.org/product/api" target="_blank" rel="noopener">semanticscholar.org</a></li>
-        <li>LiteLLM, a unified interface to model providers. <a href="https://github.com/BerriAI/litellm" target="_blank" rel="noopener">github.com/BerriAI/litellm</a></li>
-        <li>XavierLabs source code. <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener">github.com/venstqs/XavierLabs-AI</a></li>
+    <section class="wrap section" id="how">
+      <h2>How it works</h2>
+      <p class="section-sub">One command runs the whole loop. Every number in the paper comes from code that actually ran.</p>
+      <ol class="steps">
+        <li><span class="step-n">1</span><h3>Find</h3><p>Searches ArXiv and Semantic Scholar, then writes a hypothesis you can test.</p></li>
+        <li><span class="step-n">2</span><h3>Review</h3><p>A reviewer agent scores the idea and sends weak ones back before any code runs.</p></li>
+        <li><span class="step-n">3</span><h3>Experiment</h3><p>Writes Python and runs it in a sandbox. If it crashes, it reads the error and fixes it.</p></li>
+        <li><span class="step-n">4</span><h3>Write</h3><p>Plots the results and writes the paper as PDF, LaTeX, HTML and Markdown.</p></li>
       </ol>
     </section>
 
-    <footer class="folio">1</footer>
+    <section class="wrap section" id="install">
+      <h2>Install</h2>
+      <p class="section-sub">Python 3.10 or newer. Works with any model provider, or offline with Ollama.</p>
+
+      <div class="install">
+        <div class="seg" role="tablist" aria-label="Install method">
+          <button type="button" class="seg-btn active" data-tab="pip">pip</button>
+          <button type="button" class="seg-btn" data-tab="uv">uv</button>
+          <button type="button" class="seg-btn" data-tab="git">git</button>
+        </div>
+        <div class="code-row">
+          <code id="installCmd">pip install git+https://github.com/venstqs/XavierLabs-AI.git</code>
+          <button class="icon-btn" type="button" id="copyBtn" aria-label="Copy install command"><svg><use href="#copy"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cmd-list">
+        <div><code>xavier</code><span>Open the interactive console</span></div>
+        <div><code>xavier research "your question"</code><span>Run the full loop and get a paper</span></div>
+        <div><code>xavier paper &lt;folder&gt; --open</code><span>Open a finished paper</span></div>
+        <div><code>xavier history</code><span>See past runs</span></div>
+      </div>
+    </section>
+
+    <footer class="wrap footer">
+      <a class="footer-brand" href="https://adrianfolio.vercel.app/" target="_blank" rel="noopener"><svg class="logo-mark"><use href="#mark"/></svg>XavierLabs</a>
+      <span>Built by Adrian Xavier Moral</span>
+      <span class="footer-right">MIT License</span>
+    </footer>
   </main>
+
+  <nav class="dock" aria-label="Quick links">
+    <a href="#top" aria-label="Top"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg></a>
+    <a href="#how" aria-label="How it works"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/></svg></a>
+    <a href="#install" aria-label="Install"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m4 17 6-6-6-6M12 19h8"/></svg></a>
+    <span class="dock-sep"></span>
+    <a href="https://github.com/venstqs/XavierLabs-AI" target="_blank" rel="noopener" aria-label="GitHub"><svg><use href="#gh"/></svg></a>
+    <button type="button" data-theme-toggle aria-label="Toggle color theme"><svg class="i-sun"><use href="#sun"/></svg><svg class="i-moon"><use href="#moon"/></svg></button>
+  </nav>
 
   <script src="app.js"></script>
 </body>

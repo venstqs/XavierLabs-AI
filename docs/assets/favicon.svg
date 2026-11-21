@@ -1,14 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#0a0a0a"/>
-  <rect x="2" y="2" width="60" height="60" rx="12" stroke="#ffffff" stroke-width="2" stroke-opacity="0.3"/>
-  <!-- Pixel X in white -->
-  <rect x="14" y="16" width="8" height="8" fill="#ffffff"/>
-  <rect x="42" y="16" width="8" height="8" fill="#ffffff"/>
-  <rect x="22" y="24" width="8" height="8" fill="#ffffff"/>
-  <rect x="34" y="24" width="8" height="8" fill="#ffffff"/>
-  <rect x="28" y="28" width="8" height="8" fill="#ffffff"/>
-  <rect x="22" y="32" width="8" height="8" fill="#ffffff"/>
-  <rect x="34" y="32" width="8" height="8" fill="#ffffff"/>
-  <rect x="14" y="40" width="8" height="8" fill="#ffffff"/>
-  <rect x="42" y="40" width="8" height="8" fill="#ffffff"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#0a0a0a"/><g transform="translate(7 7) scale(.65)"><defs><mask id="m"><rect width="40" height="40" fill="#fff"/><polygon points="2.4,36 11.6,36 31.41,4 22.21,4" fill="#000"/></mask></defs><g transform="translate(6.33 0) skewX(-10)"><polygon points="30.0,36 36.0,36 16.19,4 10.19,4" fill="#fff" mask="url(#m)"/><polygon points="4.0,36 10.0,36 29.81,4 23.81,4" fill="#fff"/><rect x="12.076" y="25.8" width="15.848" height="4.0" fill="#fff"/></g></g></svg>

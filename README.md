@@ -13,7 +13,7 @@
 [![Sandbox](https://img.shields.io/badge/Execution-Docker%20%2F%20Subprocess%20Sandbox-yellow.svg?style=flat-square&logo=docker)](https://github.com/venstqs/XavierLabs-AI)
 [![LLM Router](https://img.shields.io/badge/LLM-Groq%20%7C%20DeepSeek%20%7C%20Ollama%20%7C%20OpenRouter-orange.svg?style=flat-square)](https://github.com/venstqs/XavierLabs-AI)
 
-[**Live Interactive Demo**](https://venstqs.github.io/XavierLabs-AI/) · [**Technical Documentation**](#system-architecture) · [**Quickstart**](#quickstart) · [**Interactive Chat Mode**](#interactive-chatbot-mode)
+[**Live Interactive Demo**](https://xavier-labs-ai-beta.vercel.app) · [**Technical Documentation**](#system-architecture) · [**Quickstart**](#quickstart) · [**Interactive Chat Mode**](#interactive-chatbot-mode)
 
 ---
 

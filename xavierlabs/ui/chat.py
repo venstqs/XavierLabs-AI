@@ -9,7 +9,17 @@ from rich.prompt import Prompt, Confirm
 from rich.markdown import Markdown
 
 from xavierlabs.config import settings
-from xavierlabs.ui.terminal import ui
+from xavierlabs.ui.terminal import (
+    ui,
+    SYN_FN,
+    SYN_STR,
+    SYN_VAR,
+    SYN_TYPE,
+    SYN_NUM,
+    SYN_ERR,
+    LINE,
+    MUTED,
+)
 from xavierlabs.llm.router import router
 from xavierlabs.sandbox.manager import get_sandbox
 from xavierlabs.loop.orchestrator import ResearchOrchestrator
@@ -51,7 +61,7 @@ class ChatSession:
 
         while self.running:
             try:
-                prompt_label = "[bold]xavier[/bold]"
+                prompt_label = f"[bold {SYN_FN}]xavier[/]"
                 if self.active_topic:
                     prompt_label += f" [dim](research:{self.active_topic[:16]}...)[/dim]"
                 prompt_label += " [dim]›[/dim]"
@@ -66,27 +76,31 @@ class ChatSession:
             except (KeyboardInterrupt, EOFError):
                 ui.console.print("\n[dim]Use /exit or quit to leave XavierLabs.[/dim]")
             except Exception as e:
-                ui.console.print(f"[bold red]Error:[/bold red] {e}\n")
+                ui.console.print(f"[bold {SYN_ERR}]Error:[/] {e}\n")
 
     def _print_welcome(self):
         sandbox, sandbox_desc = get_sandbox()
         current_model = router.resolve_auto_model()
 
         status_table = Table.grid(padding=(0, 3))
-        status_table.add_column(style="grey58", no_wrap=True)
+        status_table.add_column(style=SYN_VAR, no_wrap=True)
         status_table.add_column()
 
-        status_table.add_row("model", f"[bold]{current_model}[/bold]")
-        status_table.add_row("sandbox", sandbox_desc)
-        status_table.add_row("workspace", f"[grey58]{settings.WORKSPACE_DIR.resolve()}[/grey58]")
+        status_table.add_row("model", f"[{SYN_STR}]{current_model}[/]")
+        status_table.add_row("sandbox", f"[{SYN_TYPE}]{sandbox_desc}[/]")
+        status_table.add_row("workspace", f"[{MUTED}]{settings.WORKSPACE_DIR.resolve()}[/]")
 
         ui.console.print(Panel(
             status_table,
             box=box.ROUNDED,
-            border_style="grey27",
+            border_style=LINE,
             padding=(0, 2),
         ))
-        ui.console.print("[grey58]Describe a topic to brainstorm, [bold]/research <topic>[/bold] to run the swarm, or [bold]/help[/bold].[/grey58]\n")
+        ui.console.print(
+            f"[{MUTED}]Describe a topic to brainstorm, [/]"
+            f"[{SYN_FN}]/research[/] [{SYN_STR}]<topic>[/]"
+            f"[{MUTED}] to run the swarm, or [/][{SYN_FN}]/help[/][{MUTED}].[/]\n"
+        )
 
     def handle_input(self, text: str):
         # 1. Slash commands
@@ -103,7 +117,7 @@ class ChatSession:
                 self.cmd_clear()
             elif cmd == "research":
                 if not arg:
-                    ui.console.print("[yellow]Usage: /research <scientific question or topic>[/yellow]")
+                    ui.console.print(f"[{SYN_FN}]Usage: /research <scientific question or topic>[/]")
                 else:
                     self.run_research_workflow(arg)
             elif cmd == "paper":
@@ -118,7 +132,7 @@ class ChatSession:
             elif cmd == "config":
                 self.cmd_config()
             else:
-                ui.console.print(f"[yellow]Unknown command '{text}'. Type /help for available options.[/yellow]")
+                ui.console.print(f"[{SYN_FN}]Unknown command '{text}'. Type /help for available options.[/]")
             return
 
         # 2. Natural language exit
@@ -159,17 +173,17 @@ class ChatSession:
             ui.console.print()
 
             # Offer to launch autonomous research
-            if Confirm.ask("[bold green]Would you like XavierLabs to launch an autonomous research run on this topic now?[/bold green]", default=True):
+            if Confirm.ask(f"[bold {SYN_FN}]Launch an autonomous research run on this topic now?[/]", default=True):
                 self.run_research_workflow(user_msg)
 
         except Exception as e:
             err_msg = str(e)
-            ui.console.print(f"[bold red]LLM Error:[/bold red] {err_msg}")
+            ui.console.print(f"[bold {SYN_ERR}]LLM Error:[/] {err_msg}")
             ui.console.print("[dim]Tip: Type /config to inspect your API keys or /model to change providers.[/dim]\n")
 
     def run_research_workflow(self, topic: str):
         """Executes the end-to-end scientific research loop."""
-        ui.console.print(f"\n[bold]▶ Launching Autonomous Research Swarm for:[/] [white]{topic}[/]\n")
+        ui.console.print(f"\n[{SYN_TYPE}]▶[/] [bold white]Launching research swarm:[/bold white] [{SYN_STR}]{topic}[/]\n")
         self.active_topic = topic
         try:
             outcome = self.orchestrator.run_research(topic=topic)
@@ -178,10 +192,10 @@ class ChatSession:
             if outcome.get("status") == "rejected":
                 return
             if outcome.get("status") != "completed":
-                ui.console.print(f"\n[bold yellow]Research run did not complete.[/bold yellow] Partial files are in [bold]{exp_dir}[/bold]\n")
+                ui.console.print(f"\n[bold {SYN_FN}]Research run did not complete.[/] Partial files are in [{SYN_STR}]{exp_dir}[/]\n")
                 return
 
-            ui.console.print(f"\n[bold green]✔ Research run complete![/bold green] Artifacts saved in [bold]{exp_dir}[/bold]\n")
+            ui.console.print(f"\n[bold {SYN_TYPE}]✔ Research run complete![/] Artifacts saved in [{SYN_STR}]{exp_dir}[/]\n")
 
             # Offer to view paper
             if Confirm.ask("Open compiled research paper in viewer now?", default=True):
@@ -191,15 +205,23 @@ class ChatSession:
         except Exception as e:
             err_msg = str(e)
             ui.console.print(Panel(
-                f"[bold red]Research Execution Halted[/bold red]\n\n{err_msg}",
-                border_style="red"
+                f"[bold {SYN_ERR}]Research Execution Halted[/]\n\n{err_msg}",
+                border_style=SYN_ERR
             ))
         finally:
             self.active_topic = None
 
     def cmd_help(self):
-        table = Table(title="[bold]XavierLabs AI Interactive Commands[/bold]", show_header=True)
-        table.add_column("Command", style="bold", width=24)
+        table = Table(
+            title="[bold]Commands[/bold]",
+            title_justify="left",
+            box=box.SIMPLE_HEAD,
+            border_style=LINE,
+            header_style=MUTED,
+            show_header=True,
+            pad_edge=False,
+        )
+        table.add_column("Command", style=SYN_FN, width=24)
         table.add_column("Description", style="")
 
         for cmd, desc in HELP_COMMANDS:
@@ -215,14 +237,14 @@ class ChatSession:
 
     def cmd_model(self, model_name: str):
         if not model_name:
-            ui.console.print(f"Current active model: [bold]{router.resolve_auto_model()}[/bold]")
+            ui.console.print(f"Current active model: [bold {SYN_STR}]{router.resolve_auto_model()}[/]")
             ui.console.print("\n[dim]Popular choices:[/dim]")
-            ui.console.print("  • openrouter/deepseek/deepseek-r1")
-            ui.console.print("  • deepseek/deepseek-chat")
-            ui.console.print("  • ollama/deepseek-r1  (100% free offline)")
-            ui.console.print("  • gemini/gemini-2.5-flash")
-            ui.console.print("  • groq/llama-3.3-70b-versatile")
-            ui.console.print("  • gpt-4o-mini")
+            ui.console.print(f"  • [{SYN_STR}]openrouter/deepseek/deepseek-r1[/]")
+            ui.console.print(f"  • [{SYN_STR}]deepseek/deepseek-chat[/]")
+            ui.console.print(f"  • [{SYN_STR}]ollama/deepseek-r1[/]  [dim](100% free offline)[/dim]")
+            ui.console.print(f"  • [{SYN_STR}]gemini/gemini-2.5-flash[/]")
+            ui.console.print(f"  • [{SYN_STR}]groq/llama-3.3-70b-versatile[/]")
+            ui.console.print(f"  • [{SYN_STR}]gpt-4o-mini[/]")
             new_model = Prompt.ask("\nEnter model name or provider (or press Enter to cancel)").strip()
             if new_model:
                 model_name = new_model
@@ -234,7 +256,7 @@ class ChatSession:
         settings.REVIEWER_MODEL = model_name
         settings.CODER_MODEL = model_name
         settings.SYNTHESIZER_MODEL = model_name
-        ui.console.print(f"[bold green]✔ Model updated to:[/] [bold]{model_name}[/bold]\n")
+        ui.console.print(f"[bold {SYN_TYPE}]✔ Model updated to:[/] [bold {SYN_STR}]{model_name}[/]\n")
 
     def cmd_config(self):
         from xavierlabs.cli import show_config
@@ -251,12 +273,12 @@ class ChatSession:
             with Session(engine) as session:
                 experiments = session.exec(select(Experiment).order_by(Experiment.created_at.desc()).limit(5)).all()
                 if not experiments:
-                    ui.console.print("[yellow]No past experiments found.[/yellow]")
+                    ui.console.print(f"[{SYN_FN}]No past experiments found.[/]")
                     return
 
                 ui.console.print("\n[bold]Recent Experiments:[/bold]")
                 for idx, exp in enumerate(experiments, 1):
-                    ui.console.print(f"  [{idx}] [bold]{exp.topic}[/bold] [dim]({settings.WORKSPACE_DIR / exp.slug})[/dim]")
+                    ui.console.print(f"  [[{SYN_NUM}]{idx}[/]] [bold {SYN_STR}]{exp.topic}[/] [dim]({settings.WORKSPACE_DIR / exp.slug})[/dim]")
 
                 choice = Prompt.ask("\nEnter number to inspect paper (or Enter to cancel)").strip()
                 if choice.isdigit() and 1 <= int(choice) <= len(experiments):

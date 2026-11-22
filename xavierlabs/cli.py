@@ -7,7 +7,18 @@ from rich.table import Table
 from rich.panel import Panel
 
 from xavierlabs.config import settings
-from xavierlabs.ui.terminal import ui
+from xavierlabs.ui.terminal import (
+    ui,
+    SYN_FN,
+    SYN_STR,
+    SYN_VAR,
+    SYN_TYPE,
+    SYN_NUM,
+    SYN_ERR,
+    LINE,
+    MUTED,
+)
+from rich import box
 from xavierlabs.loop.orchestrator import ResearchOrchestrator
 from xavierlabs.sandbox.manager import get_sandbox
 from xavierlabs.db.session import init_db, engine
@@ -134,15 +145,23 @@ def show_history(
             ui.console.print("[yellow]No research experiments recorded yet in the database.[/yellow]")
             return
 
-        table = Table(title="[bold]XavierLabs AI Research History[/bold]", show_header=True)
-        table.add_column("ID", style="dim", width=6)
+        table = Table(
+            title="[bold]Research History[/bold]",
+            title_justify="left",
+            box=box.SIMPLE_HEAD,
+            border_style=LINE,
+            header_style=MUTED,
+            show_header=True,
+            pad_edge=False,
+        )
+        table.add_column("ID", style=SYN_NUM, width=6)
         table.add_column("Date", style="dim", width=18)
-        table.add_column("Topic", style="")
+        table.add_column("Topic", style=SYN_STR)
         table.add_column("Status", style="bold")
-        table.add_column("Artifacts", justify="center")
+        table.add_column("Artifacts", justify="center", style=SYN_NUM)
 
         for e in experiments:
-            status_style = "green" if e.status == "completed" else "yellow" if e.status in ["executing", "coding"] else "red"
+            status_style = SYN_TYPE if e.status == "completed" else SYN_FN if e.status in ["executing", "coding", "rejected"] else SYN_ERR
             artifact_count = len(e.artifacts)
             table.add_row(
                 str(e.id),
@@ -165,23 +184,31 @@ def show_config():
 
     from xavierlabs.llm.router import router
 
-    table = Table(title="[bold]XavierLabs AI Configuration & Compute Telemetry[/bold]", show_header=True)
-    table.add_column("Component", style="dim", width=25)
-    table.add_column("Configured Value", style="")
+    table = Table(
+        title="[bold]Configuration[/bold]",
+        title_justify="left",
+        box=box.SIMPLE_HEAD,
+        border_style=LINE,
+        header_style=MUTED,
+        show_header=True,
+        pad_edge=False,
+    )
+    table.add_column("Component", style=SYN_VAR, width=25)
+    table.add_column("Value", style="")
 
-    table.add_row("Execution Sandbox", f"[bold green]{sandbox_desc}[/bold green]")
-    table.add_row("Active/Auto Model", f"[bold]{router.resolve_auto_model()}[/bold]")
-    table.add_row("Ideator Model", settings.IDEATOR_MODEL)
-    table.add_row("Reviewer Model", settings.REVIEWER_MODEL)
-    table.add_row("Coder Model", settings.CODER_MODEL)
-    table.add_row("Synthesizer Model", settings.SYNTHESIZER_MODEL)
-    table.add_row("Max Debug Retries", str(settings.MAX_DEBUG_RETRIES))
-    table.add_row("Execution Timeout", f"{settings.EXECUTION_TIMEOUT}s")
-    table.add_row("Database Engine", f"SQLite ({settings.DB_PATH})")
-    table.add_row("Workspace Dir", str(settings.WORKSPACE_DIR.resolve()))
+    table.add_row("Execution Sandbox", f"[{SYN_TYPE}]{sandbox_desc}[/]")
+    table.add_row("Active/Auto Model", f"[{SYN_STR}]{router.resolve_auto_model()}[/]")
+    table.add_row("Ideator Model", f"[{SYN_STR}]{settings.IDEATOR_MODEL}[/]")
+    table.add_row("Reviewer Model", f"[{SYN_STR}]{settings.REVIEWER_MODEL}[/]")
+    table.add_row("Coder Model", f"[{SYN_STR}]{settings.CODER_MODEL}[/]")
+    table.add_row("Synthesizer Model", f"[{SYN_STR}]{settings.SYNTHESIZER_MODEL}[/]")
+    table.add_row("Max Debug Retries", f"[{SYN_NUM}]{settings.MAX_DEBUG_RETRIES}[/]")
+    table.add_row("Execution Timeout", f"[{SYN_NUM}]{settings.EXECUTION_TIMEOUT}s[/]")
+    table.add_row("Database Engine", f"SQLite ([{SYN_STR}]{settings.DB_PATH}[/])")
+    table.add_row("Workspace Dir", f"[{SYN_STR}]{settings.WORKSPACE_DIR.resolve()}[/]")
 
     def get_status(key_val: Optional[str]) -> str:
-        return "[green]Detected[/green]" if key_val else "[dim]Not set[/dim]"
+        return f"[{SYN_TYPE}]Detected[/]" if key_val else "[dim]Not set[/dim]"
 
     table.add_row("OPENROUTER_API_KEY", get_status(settings.OPENROUTER_API_KEY))
     table.add_row("DEEPSEEK_API_KEY", get_status(settings.DEEPSEEK_API_KEY))
@@ -190,8 +217,8 @@ def show_config():
     table.add_row("ANTHROPIC_API_KEY", get_status(settings.ANTHROPIC_API_KEY))
     table.add_row("GEMINI_API_KEY", get_status(settings.GEMINI_API_KEY))
     if settings.OPENAI_API_BASE:
-        table.add_row("OPENAI_API_BASE", f"[green]{settings.OPENAI_API_BASE}[/green]")
-    table.add_row("OLLAMA_API_BASE", settings.OLLAMA_API_BASE)
+        table.add_row("OPENAI_API_BASE", f"[{SYN_STR}]{settings.OPENAI_API_BASE}[/]")
+    table.add_row("OLLAMA_API_BASE", f"[{SYN_STR}]{settings.OLLAMA_API_BASE}[/]")
 
     ui.console.print(table)
 
@@ -222,21 +249,29 @@ def build_paper(
     tex_file = exp_path / "paper.tex"
     md_file = exp_path / "report.md"
 
-    table = Table(title=f"[bold]Research Paper Artifacts ({exp_path.name})[/bold]", show_header=True)
-    table.add_column("Format", style="bold", width=15)
-    table.add_column("Status", style="bold", width=15)
-    table.add_column("File Path", style="")
+    table = Table(
+        title=f"[bold]Research Paper Artifacts[/bold] [dim]([/][{SYN_STR}]{exp_path.name}[/][dim])[/]",
+        title_justify="left",
+        box=box.SIMPLE_HEAD,
+        border_style=LINE,
+        header_style=MUTED,
+        show_header=True,
+        pad_edge=False,
+    )
+    table.add_column("Format", style=SYN_VAR, width=18)
+    table.add_column("Status", style="bold", width=12)
+    table.add_column("File", style=SYN_STR)
 
-    table.add_row("Publication PDF", "[green]Ready[/green]" if pdf_file.exists() else "[yellow]Missing[/yellow]", str(pdf_file.resolve()))
-    table.add_row("Academic HTML", "[green]Ready[/green]" if html_file.exists() else "[yellow]Missing[/yellow]", str(html_file.resolve()))
-    table.add_row("LaTeX Source", "[green]Ready[/green]" if tex_file.exists() else "[yellow]Missing[/yellow]", str(tex_file.resolve()))
-    table.add_row("Markdown Report", "[green]Ready[/green]" if md_file.exists() else "[yellow]Missing[/yellow]", str(md_file.resolve()))
+    table.add_row("Publication PDF", f"[{SYN_TYPE}]Ready[/]" if pdf_file.exists() else f"[{SYN_FN}]Missing[/]", str(pdf_file.resolve()))
+    table.add_row("Academic HTML", f"[{SYN_TYPE}]Ready[/]" if html_file.exists() else f"[{SYN_FN}]Missing[/]", str(html_file.resolve()))
+    table.add_row("LaTeX Source", f"[{SYN_TYPE}]Ready[/]" if tex_file.exists() else f"[{SYN_FN}]Missing[/]", str(tex_file.resolve()))
+    table.add_row("Markdown Report", f"[{SYN_TYPE}]Ready[/]" if md_file.exists() else f"[{SYN_FN}]Missing[/]", str(md_file.resolve()))
 
     ui.console.print(table)
 
     target_to_open = pdf_file if pdf_file.exists() else html_file if html_file.exists() else md_file
     if open_viewer and target_to_open.exists():
-        ui.console.print(f"\n[bold green]Opening {target_to_open.name}...[/bold green]")
+        ui.console.print(f"\n[{SYN_VAR}]Opening[/] [{SYN_STR}]{target_to_open.name}[/]...")
         webbrowser.open(target_to_open.as_uri())
 
 

@@ -21,11 +21,20 @@ if sys.platform == "win32":
 console = Console(legacy_windows=False)
 
 # ---------------------------------------------------------------------------
-# XavierLabs terminal theme
-# Monochrome ink on the terminal's own background, a single green "live" accent,
-# and red/yellow reserved for failures and warnings. Mirrors the XavierLabs web brand.
+# XavierLabs VS Code Dark+ terminal theme
+# Mirrors the syntax-highlighted palette on the XavierLabs web workbench.
 # ---------------------------------------------------------------------------
-LIVE = "green"
+SYN_KW = "#569cd6"      # keyword blue
+SYN_FN = "#dcdcaa"      # function / agent yellow
+SYN_STR = "#ce9178"     # string / artifact coral
+SYN_VAR = "#9cdcfe"     # variable / field sky-blue
+SYN_TYPE = "#4ec9b0"    # type / ready / passed teal
+SYN_FLAG = "#c586c0"    # stage index / flag purple
+SYN_NUM = "#b5cea8"     # numeric metric mint
+SYN_ERR = "#f48771"     # error coral-red
+SYN_COMMENT = "#6a9955" # comment green
+
+LIVE = SYN_TYPE
 LINE = "grey27"
 MUTED = "grey58"
 TABLE_BOX = box.SIMPLE_HEAD
@@ -49,7 +58,7 @@ def _table(title: str = "") -> Table:
         title_justify="left",
         box=TABLE_BOX,
         border_style=LINE,
-        header_style=f"{MUTED}",
+        header_style=MUTED,
         show_header=True,
         pad_edge=False,
     )
@@ -58,7 +67,7 @@ def _table(title: str = "") -> Table:
 class TerminalUI:
     """
     Terminal interface for XavierLabs AI: renders agent transitions,
-    sandbox telemetry, and research artifacts in the XavierLabs style.
+    sandbox telemetry, and research artifacts with VS Code Dark+ syntax tokens.
     """
 
     def __init__(self):
@@ -72,9 +81,15 @@ class TerminalUI:
             mark = MARK_ASCII
 
         lines = [
-            Text.assemble((mark[0], "bold"), "  ", ("XavierLabs", "bold")),
-            Text.assemble((mark[1], "bold"), "  ", ("autonomous computational research", MUTED)),
-            Text.assemble((mark[2], "bold"), " ", ("●", LIVE), (f" ready · v{__version__}", MUTED)),
+            Text.assemble((mark[0], f"bold {SYN_VAR}"), "  ", ("XavierLabs", "bold white")),
+            Text.assemble((mark[1], f"bold {SYN_VAR}"), "  ", ("autonomous computational research", MUTED)),
+            Text.assemble(
+                (mark[2], f"bold {SYN_VAR}"),
+                " ",
+                ("●", SYN_TYPE),
+                (" ready · ", MUTED),
+                (f"v{__version__}", SYN_NUM),
+            ),
         ]
         self.console.print()
         for line in lines:
@@ -86,59 +101,67 @@ class TerminalUI:
         name = agent_name.replace("The ", "")
         self.console.print()
         self.console.rule(
-            f"[{MUTED}]{step}[/]  [bold]{name}[/bold]",
+            f"[{SYN_FLAG}]{step}[/]  [bold {SYN_FN}]{name}[/]",
             align="left",
             style=LINE,
         )
-        self.console.print(f"[{LIVE}]●[/] {action}")
+        self.console.print(f"[{SYN_VAR}]●[/] {action}")
 
     def print_hypothesis(self, hypothesis: Any):
         table = _table("Hypothesis")
-        table.add_column("Field", style=MUTED, width=20, no_wrap=True)
+        table.add_column("Field", style=SYN_VAR, width=20, no_wrap=True)
         table.add_column("Details")
 
-        table.add_row("Title", f"[bold]{hypothesis.title}[/bold]")
+        table.add_row("Title", f"[bold white]{hypothesis.title}[/bold white]")
         table.add_row("Motivation", hypothesis.motivation)
         table.add_row("Theoretical basis", hypothesis.theoretical_basis)
-        table.add_row("Metrics", ", ".join(hypothesis.metrics))
+        table.add_row("Metrics", f"[{SYN_STR}]{', '.join(hypothesis.metrics)}[/]")
         table.add_row("Design", hypothesis.experimental_design)
 
         self.console.print(table)
 
     def print_review(self, review: Any):
-        status = f"[bold {LIVE}]approved[/]" if review.approved else "[bold red]needs revision[/]"
+        status = f"[bold {SYN_TYPE}]approved[/]" if review.approved else f"[bold {SYN_ERR}]needs revision[/]"
         table = _table(f"Peer review · {status}")
-        table.add_column("Criterion", style=MUTED)
-        table.add_column("Score", justify="right")
+        table.add_column("Criterion", style=SYN_VAR)
+        table.add_column("Score", justify="right", style=SYN_NUM)
         table.add_column("", min_width=12)
 
-        def bar(score: float) -> str:
+        def bar(score: float, fill_color: str = SYN_TYPE) -> str:
             filled = max(0, min(10, round(score)))
-            return f"[bold]{'━' * filled}[/][{LINE}]{'━' * (10 - filled)}[/]"
+            return f"[bold {fill_color}]{'━' * filled}[/][{LINE}]{'━' * (10 - filled)}[/]"
 
         for label, score in (
             ("Novelty", review.novelty_score),
             ("Rigor", review.rigor_score),
             ("Feasibility", review.feasibility_score),
         ):
-            table.add_row(label, f"{score:.1f}", bar(score))
-        table.add_row("[bold]Overall[/bold]", f"[bold]{review.overall_score:.1f}[/bold]", bar(review.overall_score))
+            table.add_row(label, f"{score:.1f}", bar(score, SYN_TYPE))
+        table.add_row(
+            "[bold white]Overall[/bold white]",
+            f"[bold {SYN_NUM}]{review.overall_score:.1f}[/]",
+            bar(review.overall_score, SYN_FN),
+        )
 
         self.console.print(table)
         if review.weaknesses:
-            self.console.print(f"[yellow]Weaknesses:[/yellow] {', '.join(review.weaknesses)}")
+            self.console.print(f"[{SYN_FN}]Weaknesses:[/] {', '.join(review.weaknesses)}")
         if review.modifications_required:
             self.console.print(f"[{MUTED}]Requested changes: {review.modifications_required}[/]")
 
     def print_execution_telemetry(self, result: Any, iteration: int):
-        color = LIVE if result.success else "red"
+        color = SYN_TYPE if result.success else SYN_ERR
         if result.success:
             state = "passed"
         elif result.returncode == 0:
             state = "failed · no metrics.json"
         else:
             state = f"failed · exit {result.returncode}"
-        title = f"[{color}]●[/] [bold]Run #{iteration}[/bold] [{MUTED}]{state} · {result.execution_time:.2f}s · {result.sandbox_type}[/]"
+        title = (
+            f"[{color}]●[/] [bold white]Run #{iteration}[/bold white] "
+            f"[{MUTED}]{state} · [/][{SYN_NUM}]{result.execution_time:.2f}s[/]"
+            f"[{MUTED}] · {result.sandbox_type}[/]"
+        )
 
         body = Text()
         if result.metrics:
@@ -150,12 +173,14 @@ class TerminalUI:
                     shown = shown[:117] + "..."
                 lines.append((str(k).ljust(width), shown))
             for i, (k, shown) in enumerate(lines):
-                body.append(k, style=MUTED)
-                body.append(f"  {shown}" + ("\n" if i < len(lines) - 1 else ""))
+                body.append(k, style=SYN_VAR)
+                body.append(f"  {shown}", style=SYN_NUM)
+                if i < len(lines) - 1:
+                    body.append("\n")
 
         if not result.success and result.error_traceback:
             body.append("\n\n" if body else "")
-            body.append(result.error_traceback.strip()[-1500:], style="red")
+            body.append(result.error_traceback.strip()[-1500:], style=SYN_ERR)
         elif not result.metrics and result.stdout:
             body.append(result.stdout.strip()[-400:], style=MUTED)
 
@@ -163,7 +188,7 @@ class TerminalUI:
             body if body else Text("no output", style=MUTED),
             title=title,
             title_align="left",
-            border_style=LINE if result.success else "red",
+            border_style=LINE if result.success else SYN_ERR,
             box=box.ROUNDED,
             padding=(0, 1),
         ))
@@ -172,8 +197,8 @@ class TerminalUI:
         paths = [Path(p) for p in artifacts.values() if p and p != "N/A"]
         root = paths[0].parent if paths else None
         table = _table("Artifacts")
-        table.add_column("Type", style=MUTED, no_wrap=True)
-        table.add_column("File")
+        table.add_column("Type", style=SYN_VAR, no_wrap=True)
+        table.add_column("File", style=SYN_STR)
 
         for atype, path in artifacts.items():
             shown = path
@@ -183,7 +208,7 @@ class TerminalUI:
 
         self.console.print(table)
         if root:
-            self.console.print(f"[{MUTED}]in {root}[/]")
+            self.console.print(f"[{MUTED}]Artifacts in [/][{SYN_STR}]{root}[/]")
 
     def print_markdown(self, md_text: str):
         self.console.print(Markdown(md_text))

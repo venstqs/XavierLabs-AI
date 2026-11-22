@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useSpring } from 'motion/react';
 import DotGrid from './components/DotGrid.jsx';
-import DecryptedText from './components/DecryptedText.jsx';
 import BlurText from './components/BlurText.jsx';
 import PillTabs from './components/PillTabs.jsx';
 import SpotlightCard from './components/SpotlightCard.jsx';
@@ -19,46 +18,175 @@ const INSTALL_TABS = [
   { value: 'git', label: 'git clone' },
 ];
 
+/** Renders the install command with VS Code syntax colors. */
+function HighlightedInstall({ tab }) {
+  if (tab === 'pip') {
+    return (
+      <>
+        <span className="syn-fn">pip</span> <span className="syn-kw">install</span>{' '}
+        <span className="syn-str">git+{REPO}.git</span>
+      </>
+    );
+  }
+  if (tab === 'uv') {
+    return (
+      <>
+        <span className="syn-fn">uv</span> <span className="syn-var">pip</span>{' '}
+        <span className="syn-kw">install</span> <span className="syn-str">git+{REPO}.git</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <span className="syn-fn">git</span> <span className="syn-kw">clone</span>{' '}
+      <span className="syn-str">{REPO}.git</span> <span className="syn-op">&amp;&amp;</span>{' '}
+      <span className="syn-fn">cd</span> <span className="syn-type">XavierLabs-AI</span>{' '}
+      <span className="syn-op">&amp;&amp;</span> <span className="syn-fn">pip</span>{' '}
+      <span className="syn-kw">install</span> <span className="syn-flag">-e</span>{' '}
+      <span className="syn-str">.</span>
+    </>
+  );
+}
+
+/** Renders a CLI command string with VS Code syntax colors. */
+function HighlightedCli({ cmd }) {
+  if (cmd === 'xavier') return <span className="syn-fn">xavier</span>;
+  if (cmd === 'xavier auth') {
+    return (
+      <>
+        <span className="syn-fn">xavier</span> <span className="syn-var">auth</span>
+      </>
+    );
+  }
+  if (cmd === 'xavier history') {
+    return (
+      <>
+        <span className="syn-fn">xavier</span> <span className="syn-var">history</span>
+      </>
+    );
+  }
+  if (cmd === 'xavier config') {
+    return (
+      <>
+        <span className="syn-fn">xavier</span> <span className="syn-var">config</span>
+      </>
+    );
+  }
+  if (cmd.startsWith('pip install')) {
+    return (
+      <>
+        <span className="syn-fn">pip</span> <span className="syn-kw">install</span>{' '}
+        <span className="syn-str">{cmd.replace('pip install ', '')}</span>
+      </>
+    );
+  }
+  if (cmd.startsWith('xavier research')) {
+    const hasForce = cmd.endsWith('--force');
+    const arg = cmd.replace('xavier research ', '').replace(' --force', '');
+    return (
+      <>
+        <span className="syn-fn">xavier</span> <span className="syn-var">research</span>{' '}
+        <span className="syn-str">{arg}</span>
+        {hasForce && (
+          <>
+            {' '}
+            <span className="syn-flag">--force</span>
+          </>
+        )}
+      </>
+    );
+  }
+  if (cmd.startsWith('xavier paper')) {
+    const path = cmd.replace('xavier paper ', '').replace(' --open', '');
+    return (
+      <>
+        <span className="syn-fn">xavier</span> <span className="syn-var">paper</span>{' '}
+        <span className="syn-type">{path}</span> <span className="syn-flag">--open</span>
+      </>
+    );
+  }
+  return <span className="cmd">{cmd}</span>;
+}
+
 const FEATURES = [
   {
-    idx: '01 // DISCOVERY',
+    idx: '01',
+    tag: 'DISCOVERY',
+    tone: 'syn-var',
     title: 'Literature & Hypothesis',
-    body: 'Queries ArXiv and Semantic Scholar without paid API keys. Identifies open gaps in computational research and formulates mathematically testable hypotheses.',
+    body: (
+      <>
+        Queries <code className="syn-type">ArXiv</code> and{' '}
+        <code className="syn-type">Semantic Scholar</code> without paid API keys. Identifies open
+        gaps in computational research and formulates mathematically testable hypotheses.
+      </>
+    ),
   },
   {
-    idx: '02 // PEER REVIEW',
+    idx: '02',
+    tag: 'PEER_REVIEW',
+    tone: 'syn-fn',
     title: 'Adversarial Audit',
-    body: 'Simulates an expert peer reviewer to critique mathematical soundness and feasibility before code runs. Scores proposals from 1 to 10 and sends weak ones back for revision.',
+    body: (
+      <>
+        Simulates an expert peer reviewer to critique mathematical soundness and feasibility before
+        code runs. Scores proposals from <code className="syn-num">1.0</code> to{' '}
+        <code className="syn-num">10.0</code> and sends weak ones back for revision.
+      </>
+    ),
   },
   {
-    idx: '03 // CONTAINMENT',
+    idx: '03',
+    tag: 'CONTAINMENT',
+    tone: 'syn-flag',
     title: 'Sandboxed Auto-Debugger',
-    body: 'Runs generated simulations in an offline Docker container or a locked-down local sandbox. When code crashes, it reads the traceback and rewrites the script.',
+    body: (
+      <>
+        Runs generated simulations in an offline <code className="syn-kw">Docker</code> container or
+        a locked-down local sandbox. When code crashes, it reads the{' '}
+        <code className="syn-str">stderr</code> traceback and rewrites the script.
+      </>
+    ),
   },
   {
-    idx: '04 // SIMULATION',
+    idx: '04',
+    tag: 'SIMULATION',
+    tone: 'syn-type',
     title: 'Empirical Verification',
     body: (
       <>
-        Writes self-contained scientific Python simulations (NumPy, SciPy). Fixes deterministic seeds and saves hard
-        computed results to <code>metrics.json</code>.
+        Writes self-contained scientific Python simulations (<code className="syn-fn">NumPy</code>,{' '}
+        <code className="syn-fn">SciPy</code>). Fixes deterministic seeds and saves hard computed
+        results to <code className="syn-str">metrics.json</code>.
       </>
     ),
   },
   {
-    idx: '05 // SYNTHESIS',
+    idx: '05',
+    tag: 'SYNTHESIS',
+    tone: 'syn-str',
     title: 'Publication-Ready Papers',
     body: (
       <>
-        Renders 300-DPI figures and compiles complete manuscripts: <code>paper.tex</code>, <code>paper.pdf</code>,{' '}
-        <code>paper.html</code> and Markdown.
+        Renders 300-DPI figures and compiles complete manuscripts:{' '}
+        <code className="syn-str">paper.tex</code>, <code className="syn-str">paper.pdf</code>,{' '}
+        <code className="syn-str">paper.html</code> and Markdown.
       </>
     ),
   },
   {
-    idx: '06 // MULTI-MODEL',
+    idx: '06',
+    tag: 'MULTI_MODEL',
+    tone: 'syn-kw',
     title: 'Universal Model Support',
-    body: 'Connect Groq for fast inference, DeepSeek for mathematical reasoning, OpenRouter for 100+ models, or run fully offline with local Ollama.',
+    body: (
+      <>
+        Connect <code className="syn-var">Groq</code> for fast inference,{' '}
+        <code className="syn-var">DeepSeek</code> for mathematical reasoning,{' '}
+        <code className="syn-var">OpenRouter</code> for 100+ models, or run fully offline with local{' '}
+        <code className="syn-type">Ollama</code>.
+      </>
+    ),
   },
 ];
 
@@ -78,6 +206,26 @@ const QUICKSTART = [
   ['# 4. Or run a one-liner autonomous research loop', 'xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"'],
   ['# 5. View and open the compiled research paper', 'xavier paper experiments/your_experiment_folder --open'],
 ];
+
+/** Official XavierLabs geometric mark + wordmark lockup */
+function XavierMark({ id = 'xl-mark-mask', className = 'xl-mark' }) {
+  return (
+    <svg className={className} viewBox="0 0 40 40" aria-hidden="true">
+      <rect width="40" height="40" rx="10" fill="currentColor" />
+      <g transform="translate(7 7) scale(.65)">
+        <mask id={id}>
+          <rect width="40" height="40" fill="#fff" />
+          <polygon points="2.4,36 11.6,36 31.41,4 22.21,4" fill="#000" />
+        </mask>
+        <g transform="translate(6.33 0) skewX(-10)" style={{ fill: 'var(--bg)' }}>
+          <polygon points="30.0,36 36.0,36 16.19,4 10.19,4" mask={`url(#${id})`} />
+          <polygon points="4.0,36 10.0,36 29.81,4 23.81,4" />
+          <rect x="12.076" y="25.8" width="15.848" height="4.0" />
+        </g>
+      </g>
+    </svg>
+  );
+}
 
 function GitHubIcon() {
   return (
@@ -204,7 +352,10 @@ export default function App() {
 
       <header>
         <div className="container header-inner">
-          <a href="#" className="pixel-logo" aria-label="xavierlabs home">xavierlabs</a>
+          <a href="#" className="brand-logo" aria-label="XavierLabs home">
+            <XavierMark id="nav-xl-mask" className="xl-mark" />
+            <span>XavierLabs</span>
+          </a>
           <nav className="header-nav" aria-label="Main">
             <a href="#demo">demo</a>
             <a href="#features">features</a>
@@ -221,22 +372,37 @@ export default function App() {
 
       <main className="container">
         <section className="hero">
-          <DecryptedText text="xavierlabs" className="hero-brand-name" />
-          <BlurText text="Terminal-native computational scientific research engine." className="hero-headline" delay={0.35} />
+          <motion.div
+            className="hero-logo-lockup"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <XavierMark id="hero-xl-mask" className="hero-xl-mark" />
+            <span className="hero-xl-word">XavierLabs</span>
+          </motion.div>
+
+          <BlurText
+            text="Terminal-native computational scientific research engine."
+            className="hero-headline"
+            delay={0.2}
+          />
+
           <motion.p
             className="hero-subtext"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
           >
-            From literature review to compiled LaTeX papers, in one command.
+            From literature review to compiled <span className="syn-type">LaTeX</span> papers, in
+            one command.
           </motion.p>
 
           <motion.div
             className="install-container"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.85, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <PillTabs
               items={INSTALL_TABS}
@@ -258,13 +424,16 @@ export default function App() {
                     exit={{ opacity: 0, y: -6, filter: 'blur(4px)' }}
                     transition={{ duration: 0.18 }}
                   >
-                    {INSTALL[installTab]}
+                    <HighlightedInstall tab={installTab} />
                   </motion.span>
                 </AnimatePresence>
               </code>
               <CopyButton text={INSTALL[installTab]} onCopied={showToast} />
             </div>
-            <div className="install-meta">Python 3.10+ · macOS, Linux, Windows · MIT License</div>
+            <div className="install-meta">
+              <span className="syn-var">Python 3.10+</span> · macOS, Linux, Windows ·{' '}
+              <span className="syn-fn">MIT License</span>
+            </div>
           </motion.div>
 
           <Terminal />
@@ -273,7 +442,10 @@ export default function App() {
         <section className="features-grid" id="features">
           {FEATURES.map((f, i) => (
             <SpotlightCard key={f.idx} className="feature-col" index={i}>
-              <div className="feature-idx">{f.idx}</div>
+              <div className="feature-idx">
+                <span className="syn-comment">{f.idx} //</span>{' '}
+                <span className={f.tone}>{f.tag}</span>
+              </div>
               <h3>{f.title}</h3>
               <p>{f.body}</p>
             </SpotlightCard>
@@ -283,7 +455,7 @@ export default function App() {
         <WorkflowBox id="commands" title="// CLI COMMANDS & WORKFLOW">
           {COMMANDS.map(([cmd, note]) => (
             <Line key={cmd}>
-              <span className="cmd">{cmd}</span> <span className="comment"># {note}</span>
+              <HighlightedCli cmd={cmd} /> <span className="comment"># {note}</span>
             </Line>
           ))}
         </WorkflowBox>
@@ -293,7 +465,9 @@ export default function App() {
             <span key={comment}>
               {i > 0 && <span className="line gap" aria-hidden="true" />}
               <Line className="comment">{comment}</Line>
-              <Line className="cmd">{cmd}</Line>
+              <Line>
+                <HighlightedCli cmd={cmd} />
+              </Line>
             </span>
           ))}
         </WorkflowBox>
@@ -301,9 +475,18 @@ export default function App() {
 
       <footer>
         <div className="container footer-inner">
-          <div>
-            xavierlabs-ai · MIT License · Created by{' '}
-            <a href="https://adrianfolio.vercel.app/" target="_blank" rel="noopener noreferrer">Adrian Xavier Moral</a>
+          <div className="footer-brand">
+            <XavierMark id="footer-xl-mask" className="footer-xl-mark" />
+            <span>XavierLabs</span>
+            <span className="footer-sep">·</span>
+            <span>MIT License</span>
+            <span className="footer-sep">·</span>
+            <span>
+              Created by{' '}
+              <a href="https://adrianfolio.vercel.app/" target="_blank" rel="noopener noreferrer">
+                Adrian Xavier Moral
+              </a>
+            </span>
           </div>
           <div>
             <a href={REPO} target="_blank" rel="noopener noreferrer">GitHub Repository ↗</a>

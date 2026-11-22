@@ -3,10 +3,6 @@ import { useReducedMotion } from 'motion/react';
 
 const GLYPHS = 'abcdefghijklmnopqrstuvwxyz0123456789#%&*+=<>/';
 
-/**
- * Scramble-to-reveal text: characters resolve left to right.
- * Plays on mount and again on hover.
- */
 export default function DecryptedText({ text, className = '', speed = 38, as: Tag = 'div' }) {
   const reduced = useReducedMotion();
   const [shown, setShown] = useState(reduced ? text : '');

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>xavierlabs — autonomous computational scientific research engine</title>
-  <meta name="description" content="A terminal-native research engine that runs computational experiments from hypothesis to LaTeX paper." />
-  <meta name="author" content="Adrian Xavier Moral" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XavierLabs — Autonomous Computational Research Engine</title>
+  <meta name="description" content="A terminal-native research engine that runs computational experiments from hypothesis to LaTeX paper.">
+  <meta name="author" content="Adrian Xavier Moral">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 
   <script>
     try {
@@ -15,18 +15,22 @@
       if (t !== 'light' && t !== 'dark') t = 'dark';
       document.documentElement.dataset.theme = t;
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.setAttribute('content', t === 'dark' ? '#0a0a0a' : '#ffffff');
+      if (m) m.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
     } catch (e) {
       document.documentElement.dataset.theme = 'dark';
     }
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="root"></div>
+  <noscript>
+    <p style="padding:24px;font-family:system-ui">XavierLabs: terminal-native computational research engine.
+      <a href="https://github.com/venstqs/XavierLabs-AI">View on GitHub</a></p>
+  </noscript>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

@@ -3,13 +3,24 @@ import { motion, useInView, useReducedMotion } from 'motion/react';
 import PillTabs from './PillTabs.jsx';
 import { DEMOS, TABS } from './demos.js';
 
-const CLASS = { b: 't-b', d: 't-d', g: 't-g', r: 't-r', y: 't-y', l: 't-l' };
+const CLASS = {
+  b: 't-b',
+  d: 't-d',
+  g: 't-g',
+  r: 't-r',
+  y: 't-y',
+  c: 't-c',
+  s: 't-s',
+  p: 't-p',
+  n: 't-n',
+  l: 't-l',
+};
 
 /** Turns the demo markup into React nodes (text is never parsed as HTML). */
 function Markup({ src }) {
   const root = [];
   const stack = [root];
-  const re = /\[(\/|[bdgryl])\]/g;
+  const re = /\[(\/|[bdgrycspnl])\]/g;
   let last = 0;
   let m;
   let key = 0;
@@ -36,7 +47,36 @@ function Markup({ src }) {
   return <>{root}</>;
 }
 
-const PROMPTS = { cmd: '[b]xavier@lab[/]:[d]~[/]$ ', chat: '\n[b]xavier[/] [d]›[/] ' };
+/** Highlights a typed shell or chat command like VS Code syntax highlighting. */
+function HighlightedTyped({ text }) {
+  if (!text) return null;
+  if (text.startsWith('/')) {
+    const space = text.indexOf(' ');
+    if (space === -1) return <span className="t-y">{text}</span>;
+    return (
+      <>
+        <span className="t-y">{text.slice(0, space)}</span>
+        <span className="t-s">{text.slice(space)}</span>
+      </>
+    );
+  }
+  if (text.startsWith('xavier')) {
+    const parts = text.match(/^(xavier)(?:\s+(research|paper|history|config|auth))?(.*)$/);
+    if (parts) {
+      const [, bin, sub, rest] = parts;
+      return (
+        <>
+          <span className="t-y">{bin}</span>
+          {sub && <span className="t-c">{` ${sub}`}</span>}
+          {rest && <span className="t-s">{rest}</span>}
+        </>
+      );
+    }
+  }
+  return <span className="t-b">{text}</span>;
+}
+
+const PROMPTS = { cmd: '[c]xavier@lab[/]:[d]~[/]$ ', chat: '\n[y]xavier[/] [d]›[/] ' };
 
 export default function Terminal() {
   const [tab, setTab] = useState('chat');
@@ -127,7 +167,7 @@ export default function Terminal() {
           ) : (
             <span key={i}>
               <Markup src={b.prefix} />
-              <span className="t-b">{b.typed}</span>
+              <HighlightedTyped text={b.typed} />
               {b.typing && <span className="cursor-blink" />}
               {!b.typing && '\n'}
             </span>

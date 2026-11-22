@@ -1,6 +1,5 @@
 import { motion } from 'motion/react';
 
-/** Words fade in from blurred and slightly lowered, one after another. */
 export default function BlurText({ text, as = 'h1', className = '', delay = 0, stagger = 0.06 }) {
   const Tag = motion[as];
   const words = text.split(' ');

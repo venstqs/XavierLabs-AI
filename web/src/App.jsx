@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useSpring } from 'motion/react';
 import DotGrid from './components/DotGrid.jsx';
 import BlurText from './components/BlurText.jsx';
 import PillTabs from './components/PillTabs.jsx';
 import SpotlightCard from './components/SpotlightCard.jsx';
 import Terminal from './components/Terminal.jsx';
+import LogoLoop from './components/rb/LogoLoop.jsx';
 
 const REPO = 'https://github.com/venstqs/XavierLabs-AI';
 const INSTALL = {
@@ -16,6 +17,23 @@ const INSTALL_TABS = [
   { value: 'pip', label: 'pip' },
   { value: 'uv', label: 'uv' },
   { value: 'git', label: 'git clone' },
+];
+
+const STACK_TAGS = [
+  { name: 'ArXiv', tone: 'syn-type' },
+  { name: 'Semantic Scholar', tone: 'syn-type' },
+  { name: 'LiteLLM', tone: 'syn-fn' },
+  { name: 'Groq', tone: 'syn-var' },
+  { name: 'DeepSeek', tone: 'syn-var' },
+  { name: 'OpenRouter', tone: 'syn-var' },
+  { name: 'Ollama', tone: 'syn-type' },
+  { name: 'Gemini', tone: 'syn-var' },
+  { name: 'Docker', tone: 'syn-kw' },
+  { name: 'NumPy', tone: 'syn-fn' },
+  { name: 'SciPy', tone: 'syn-fn' },
+  { name: 'Matplotlib', tone: 'syn-str' },
+  { name: 'SQLite', tone: 'syn-flag' },
+  { name: 'LaTeX', tone: 'syn-str' },
 ];
 
 /** Renders the install command with VS Code syntax colors. */
@@ -113,6 +131,7 @@ const FEATURES = [
     idx: '01',
     tag: 'DISCOVERY',
     tone: 'syn-var',
+    sig: 'arxiv.query() -> hypothesis.json',
     title: 'Literature & Hypothesis',
     body: (
       <>
@@ -126,6 +145,7 @@ const FEATURES = [
     idx: '02',
     tag: 'PEER_REVIEW',
     tone: 'syn-fn',
+    sig: 'review.score >= 7.0',
     title: 'Adversarial Audit',
     body: (
       <>
@@ -139,6 +159,7 @@ const FEATURES = [
     idx: '03',
     tag: 'CONTAINMENT',
     tone: 'syn-flag',
+    sig: 'docker run --network=none',
     title: 'Sandboxed Auto-Debugger',
     body: (
       <>
@@ -152,6 +173,7 @@ const FEATURES = [
     idx: '04',
     tag: 'SIMULATION',
     tone: 'syn-type',
+    sig: 'seed(42) -> metrics.json',
     title: 'Empirical Verification',
     body: (
       <>
@@ -165,6 +187,7 @@ const FEATURES = [
     idx: '05',
     tag: 'SYNTHESIS',
     tone: 'syn-str',
+    sig: 'paper.tex -> paper.pdf',
     title: 'Publication-Ready Papers',
     body: (
       <>
@@ -178,6 +201,7 @@ const FEATURES = [
     idx: '06',
     tag: 'MULTI_MODEL',
     tone: 'syn-kw',
+    sig: 'groq | deepseek | ollama',
     title: 'Universal Model Support',
     body: (
       <>
@@ -199,15 +223,21 @@ const COMMANDS = [
   ['xavier config', 'Inspect the active model, detected API keys and sandbox'],
 ];
 
-const QUICKSTART = [
-  ['# 1. Install the CLI', `pip install git+${REPO}.git`],
-  ['# 2. Connect a model provider (Groq, DeepSeek, OpenRouter, or Ollama)', 'xavier auth'],
-  ['# 3. Launch the interactive console', 'xavier'],
-  ['# 4. Or run a one-liner autonomous research loop', 'xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"'],
-  ['# 5. View and open the compiled research paper', 'xavier paper experiments/your_experiment_folder --open'],
+const QUICKSTART_LINES = [
+  { type: 'comment', text: '# 1. Install the CLI' },
+  { type: 'cmd', text: `pip install git+${REPO}.git` },
+  { type: 'empty' },
+  { type: 'comment', text: '# 2. Connect a model provider (Groq, DeepSeek, OpenRouter, or Ollama)' },
+  { type: 'cmd', text: 'xavier auth' },
+  { type: 'empty' },
+  { type: 'comment', text: '# 3. Launch the interactive console or run an autonomous research loop' },
+  { type: 'cmd', text: 'xavier research "Analyze AdamW vs Lion optimizer on non-convex loss functions"' },
+  { type: 'empty' },
+  { type: 'comment', text: '# 4. View and open the compiled research paper' },
+  { type: 'cmd', text: 'xavier paper experiments/your_experiment_folder --open' },
 ];
 
-/** Official XavierLabs geometric mark + wordmark lockup */
+/** Official XavierLabs geometric mark */
 function XavierMark({ id = 'xl-mark-mask', className = 'xl-mark' }) {
   return (
     <svg className={className} viewBox="0 0 40 40" aria-hidden="true">
@@ -280,7 +310,7 @@ function copyText(text) {
   return Promise.resolve();
 }
 
-function CopyButton({ text, onCopied }) {
+function CopyButton({ text, onCopied, label = 'Copy' }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef(0);
   const click = () => {
@@ -301,34 +331,12 @@ function CopyButton({ text, onCopied }) {
           exit={{ y: -6, opacity: 0 }}
           transition={{ duration: 0.15 }}
         >
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? '✓ Copied' : label}
         </motion.span>
       </AnimatePresence>
     </motion.button>
   );
 }
-
-/** Code block whose lines slide in one after another when scrolled into view. */
-function WorkflowBox({ id, title, children }) {
-  return (
-    <motion.section
-      className="workflow-box"
-      id={id}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-60px' }}
-      variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.05, delayChildren: 0.15 } } }}
-    >
-      <div className="workflow-header">{title}</div>
-      <div className="workflow-code">{children}</div>
-    </motion.section>
-  );
-}
-
-const lineVariants = { hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0, transition: { duration: 0.35 } } };
-const Line = ({ className, children }) => (
-  <motion.span className={`line${className ? ` ${className}` : ''}`} variants={lineVariants}>{children}</motion.span>
-);
 
 export default function App() {
   const [installTab, setInstallTab] = useState('pip');
@@ -338,16 +346,39 @@ export default function App() {
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.3 });
 
   const showToast = useCallback((text) => {
-    setToast(`Copied: "${text.length > 34 ? `${text.slice(0, 34)}...` : text}"`);
+    setToast(`Copied: "${text.length > 36 ? `${text.slice(0, 36)}...` : text}"`);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 2200);
   }, []);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
+  const stackLogos = useMemo(
+    () =>
+      STACK_TAGS.map((item) => ({
+        node: (
+          <span className="stack-chip">
+            <span className={`stack-dot ${item.tone}`} />
+            <span>{item.name}</span>
+          </span>
+        ),
+        ariaLabel: item.name,
+      })),
+    []
+  );
+
+  const quickstartRaw = useMemo(
+    () =>
+      QUICKSTART_LINES.filter((l) => l.type === 'cmd')
+        .map((l) => l.text)
+        .join('\n'),
+    []
+  );
+
   return (
     <>
       <motion.div className="scroll-progress" style={{ scaleX: progress }} aria-hidden="true" />
+      <div className="ambient-glow" aria-hidden="true" />
       <DotGrid />
 
       <header>
@@ -355,11 +386,12 @@ export default function App() {
           <a href="#" className="brand-logo" aria-label="XavierLabs home">
             <XavierMark id="nav-xl-mask" className="xl-mark" />
             <span>XavierLabs</span>
+            <span className="brand-badge">v0.1</span>
           </a>
           <nav className="header-nav" aria-label="Main">
             <a href="#demo">demo</a>
-            <a href="#features">features</a>
-            <a href="#commands">commands</a>
+            <a href="#features">architecture</a>
+            <a href="#commands">cli</a>
             <a href="#quickstart">quickstart</a>
             <ThemeToggle />
             <a href={REPO} target="_blank" rel="noopener noreferrer" className="btn-github-nav">
@@ -373,36 +405,42 @@ export default function App() {
       <main className="container">
         <section className="hero">
           <motion.div
-            className="hero-logo-lockup"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="hero-logo-pill"
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <XavierMark id="hero-xl-mask" className="hero-xl-mark" />
             <span className="hero-xl-word">XavierLabs</span>
+            <span className="hero-pill-sep" />
+            <code className="hero-pill-tag">
+              <span className="syn-kw">agent</span>.<span className="syn-fn">swarm</span>()
+            </code>
           </motion.div>
 
           <BlurText
-            text="Terminal-native computational scientific research engine."
+            text="Autonomous scientific research, from question to compiled paper."
             className="hero-headline"
-            delay={0.2}
+            delay={0.15}
           />
 
           <motion.p
             className="hero-subtext"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
+            transition={{ delay: 0.55, duration: 0.5 }}
           >
-            From literature review to compiled <span className="syn-type">LaTeX</span> papers, in
-            one command.
+            Four specialized agents query <span className="syn-type">ArXiv</span>, audit hypotheses,
+            execute and auto-debug real <span className="syn-fn">Python</span> experiments in an
+            isolated <span className="syn-kw">Docker</span> sandbox, and compile publication-ready{' '}
+            <span className="syn-str">LaTeX / PDF</span> manuscripts.
           </motion.p>
 
           <motion.div
             className="install-container"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.85, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.72, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <PillTabs
               items={INSTALL_TABS}
@@ -432,52 +470,115 @@ export default function App() {
             </div>
             <div className="install-meta">
               <span className="syn-var">Python 3.10+</span> · macOS, Linux, Windows ·{' '}
+              <span className="syn-type">Docker</span> optional ·{' '}
               <span className="syn-fn">MIT License</span>
             </div>
           </motion.div>
 
           <Terminal />
+
+          <div className="stack-strip" aria-label="Supported ecosystem">
+            <LogoLoop
+              logos={stackLogos}
+              speed={42}
+              gap={10}
+              logoHeight={28}
+              pauseOnHover
+              fadeOut
+              fadeOutWidth={0.12}
+              draggable
+              ariaLabel="Supported tools and model providers"
+            />
+          </div>
         </section>
 
-        <section className="features-grid" id="features">
-          {FEATURES.map((f, i) => (
-            <SpotlightCard key={f.idx} className="feature-col" index={i}>
-              <div className="feature-idx">
-                <span className="syn-comment">{f.idx} //</span>{' '}
-                <span className={f.tone}>{f.tag}</span>
+        <section className="section-block" id="features">
+          <div className="section-head">
+            <span className="section-comment">// 01 · ARCHITECTURE &amp; PIPELINE</span>
+            <h2>Built for empirical verification, not hallucinated prose.</h2>
+            <p>
+              Every number and figure in the final manuscript comes from deterministic Python code
+              that actually executed in the sandbox.
+            </p>
+          </div>
+
+          <div className="features-grid">
+            {FEATURES.map((f, i) => (
+              <SpotlightCard key={f.idx} className="feature-col" index={i}>
+                <div className="feature-top">
+                  <div className="feature-idx">
+                    <span className="syn-comment">{f.idx} //</span>{' '}
+                    <span className={f.tone}>{f.tag}</span>
+                  </div>
+                  <span className="feature-dot" />
+                </div>
+                <h3>{f.title}</h3>
+                <p>{f.body}</p>
+                <div className="feature-foot">
+                  <code>{f.sig}</code>
+                </div>
+              </SpotlightCard>
+            ))}
+          </div>
+        </section>
+
+        <section className="section-block" id="commands">
+          <div className="section-head">
+            <span className="section-comment">// 02 · COMMAND LINE INTERFACE</span>
+            <h2>Everything from one binary.</h2>
+            <p>Click any command below to copy it directly to your clipboard.</p>
+          </div>
+
+          <div className="cli-table">
+            {COMMANDS.map(([cmd, note]) => (
+              <button
+                key={cmd}
+                type="button"
+                className="cli-row"
+                onClick={() => copyText(cmd).then(() => showToast(cmd))}
+              >
+                <code className="cli-cmd">
+                  <span className="cli-prompt">$</span>
+                  <HighlightedCli cmd={cmd} />
+                </code>
+                <span className="cli-desc">
+                  <span className="syn-comment"># {note}</span>
+                  <span className="cli-copy-hint">Copy</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="section-block" id="quickstart">
+          <div className="editor-window">
+            <div className="editor-bar">
+              <div className="editor-tab">
+                <span className="editor-file-dot" />
+                <code>quickstart.sh</code>
               </div>
-              <h3>{f.title}</h3>
-              <p>{f.body}</p>
-            </SpotlightCard>
-          ))}
+              <CopyButton text={quickstartRaw} onCopied={showToast} label="Copy script" />
+            </div>
+            <div className="editor-body">
+              {QUICKSTART_LINES.map((line, i) => (
+                <div key={i} className="editor-line">
+                  <span className="editor-ln">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="editor-code">
+                    {line.type === 'comment' && <span className="comment">{line.text}</span>}
+                    {line.type === 'cmd' && <HighlightedCli cmd={line.text} />}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
-
-        <WorkflowBox id="commands" title="// CLI COMMANDS & WORKFLOW">
-          {COMMANDS.map(([cmd, note]) => (
-            <Line key={cmd}>
-              <HighlightedCli cmd={cmd} /> <span className="comment"># {note}</span>
-            </Line>
-          ))}
-        </WorkflowBox>
-
-        <WorkflowBox id="quickstart" title="// QUICKSTART WORKFLOW">
-          {QUICKSTART.map(([comment, cmd], i) => (
-            <span key={comment}>
-              {i > 0 && <span className="line gap" aria-hidden="true" />}
-              <Line className="comment">{comment}</Line>
-              <Line>
-                <HighlightedCli cmd={cmd} />
-              </Line>
-            </span>
-          ))}
-        </WorkflowBox>
       </main>
 
       <footer>
         <div className="container footer-inner">
           <div className="footer-brand">
             <XavierMark id="footer-xl-mask" className="footer-xl-mark" />
-            <span>XavierLabs</span>
+            <span className="footer-name">XavierLabs</span>
             <span className="footer-sep">·</span>
             <span>MIT License</span>
             <span className="footer-sep">·</span>

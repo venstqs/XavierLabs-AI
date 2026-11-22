@@ -80,11 +80,12 @@ const PROMPTS = { cmd: '[c]xavier@lab[/]:[d]~[/]$ ', chat: '\n[y]xavier[/] [d]â€
 
 export default function Terminal() {
   const [tab, setTab] = useState('chat');
+  const [runKey, setRunKey] = useState(0);
   const [blocks, setBlocks] = useState([]);
   const [finished, setFinished] = useState(false);
   const wrapRef = useRef(null);
   const bodyRef = useRef(null);
-  const inView = useInView(wrapRef, { once: true, amount: 0.3 });
+  const inView = useInView(wrapRef, { once: true, amount: 0.25 });
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export default function Terminal() {
           setBlocks((b) => [...b, { prefix: PROMPTS[kind], typed: '', typing: true }]);
           for (let i = 1; i <= text.length; i++) {
             if (cancelled) return;
-            if (!reduced) await wait(16 + Math.random() * 24);
+            if (!reduced) await wait(14 + Math.random() * 22);
             setBlocks((b) => {
               const next = b.slice();
               next[next.length - 1] = { ...next[next.length - 1], typed: text.slice(0, reduced ? text.length : i) };
@@ -118,7 +119,7 @@ export default function Terminal() {
             next[next.length - 1] = { ...next[next.length - 1], typing: false };
             return next;
           });
-          await wait(260);
+          await wait(240);
         } else {
           setBlocks((b) => [...b, { out: step.out }]);
           await wait(step.d || 200);
@@ -131,7 +132,7 @@ export default function Terminal() {
       cancelled = true;
       timers.forEach(clearTimeout);
     };
-  }, [tab, inView, reduced]);
+  }, [tab, runKey, inView, reduced]);
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -143,13 +144,17 @@ export default function Terminal() {
       ref={wrapRef}
       className="terminal-wrapper"
       id="demo"
-      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      initial={{ opacity: 0, y: 24, scale: 0.985 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="terminal-header">
-        <div className="terminal-dots" aria-hidden="true"><span /><span /><span /></div>
+        <div className="terminal-dots" aria-hidden="true">
+          <span className="dot-r" />
+          <span className="dot-y" />
+          <span className="dot-g" />
+        </div>
         <PillTabs
           items={TABS}
           value={tab}
@@ -159,7 +164,17 @@ export default function Terminal() {
           tabClassName="term-tab"
           label="Demo command"
         />
+        <button
+          type="button"
+          className="term-replay"
+          onClick={() => setRunKey((k) => k + 1)}
+          title="Replay session"
+          aria-label="Replay terminal session"
+        >
+          â†» Replay
+        </button>
       </div>
+
       <pre className="terminal-body" ref={bodyRef} aria-live="polite">
         {blocks.map((b, i) =>
           b.out !== undefined ? (
@@ -181,6 +196,25 @@ export default function Terminal() {
           </span>
         )}
       </pre>
+
+      <div className="terminal-statusbar" aria-hidden="true">
+        <div className="status-left">
+          <span className="status-mode">{finished ? 'IDLE' : 'RUNNING'}</span>
+          <span className="status-item">
+            <span className="t-c">branch</span> main
+          </span>
+          <span className="status-item">
+            <span className="t-g">sandbox</span> docker:isolated
+          </span>
+        </div>
+        <div className="status-right">
+          <span className="status-item">
+            <span className="t-s">groq/llama-3.3-70b</span>
+          </span>
+          <span className="status-item">python 3.10+</span>
+          <span className="status-item">UTF-8</span>
+        </div>
+      </div>
     </motion.div>
   );
 }
